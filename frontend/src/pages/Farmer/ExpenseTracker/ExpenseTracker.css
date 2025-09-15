@@ -1,0 +1,111 @@
+.expense-container {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 20px;
+  padding: 20px;
+}
+
+.expense-form-card, .expense-charts-card, .expense-table-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.expense-form {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+}
+
+.expense-form input,
+.expense-form select,
+.expense-form textarea {
+  padding: 20px;
+  border: 3px solid #ccc;
+  border-radius: 14px;
+}
+
+.expense-form button {
+  background: #76e679;
+  color: #fff;
+  border: none;
+  padding: 15px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 18px;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-top: 10px;
+  letter-spacing: 1px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(45deg, #76e679, #4caf50);
+
+
+}
+
+.expense-form button:hover {
+  background: #388E3C;
+}
+
+.expense-charts-card .chart {
+  margin-bottom: 20px;
+}
+
+.expense-table {
+  width: 250%;
+  border-collapse: collapse;
+}
+
+.expense-table th, .expense-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+  font-size: 16px;
+  color: #000000;
+  font-weight: bold;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: background 0.3s;
+
+}
+
+.expense-table th {
+  background: #bdf4fd;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.edit-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin-right: 6px;
+  cursor: pointer;
+}
+
+.edit-btn:hover {
+  background: #0d47a1;
+}
+
+.delete-btn {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background: #c62828;
+}
+
+@media (max-width: 900px) {
+  .expense-container {
+    grid-template-columns: 1fr;
+  }
+}

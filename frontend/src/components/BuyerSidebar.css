@@ -1,0 +1,94 @@
+/* Wrapper holds sidebar + toggle */
+.sidebar-wrapper {
+  position: fixed;
+  top: 60px; /* ✅ below navbar */
+  left: 0;
+  height: calc(100% - 60px); /* ✅ not overlapping navbar */
+  display: flex;
+  z-index: 1000;
+}
+
+/* Sidebar */
+.buyer-sidebar {
+  background: #2e7d32;
+  color: white;
+  height: 100%;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  padding-top: 20px;
+}
+
+.sidebar-wrapper.open .buyer-sidebar {
+  width: 220px;
+}
+
+.sidebar-wrapper.closed .buyer-sidebar {
+  width: 0;
+}
+
+/* Logo */
+.logo {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* Links */
+.buyer-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.buyer-sidebar li {
+  margin: 12px 0;
+}
+
+.buyer-sidebar a {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  color: white;
+  text-decoration: none;
+  transition: background 0.3s;
+}
+
+.buyer-sidebar a:hover {
+  background: #388e3c;
+}
+
+.buyer-sidebar .active a {
+  background: #1b5e20;
+  border-radius: 6px;
+}
+
+.icon {
+  font-size: 18px;
+  margin-right: 10px;
+}
+
+/* Toggle button */
+.sidebar-toggle {
+  position: absolute;
+  top: 20px; /* ✅ inside sidebar area, below navbar */
+  right: -18px; /* ✅ sticks outside edge */
+  width: 18px;
+  height: 50px;
+  background: #2e7d32;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 4px 4px 0;
+  transition: background 0.3s;
+}
+
+.sidebar-toggle:hover {
+  background: #388e3c;
+}

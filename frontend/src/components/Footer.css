@@ -1,0 +1,92 @@
+.footer {
+  background: #1e293b; /* dark slate */
+  color: #ffffff;
+  padding: 2rem 1rem;
+  margin-top: 2rem;
+}
+
+.footer-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.footer-brand {
+  flex: 1;
+  min-width: 250px;
+}
+
+.footer-brand h2 {
+  margin-bottom: 0.5rem;
+}
+
+.footer-links,
+.footer-contact {
+  flex: 1;
+  min-width: 200px;
+}
+
+.footer-links ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-links li {
+  margin-bottom: 0.5rem;
+}
+
+.footer-links a {
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+.footer-links a:hover {
+  color: #38bdf8; /* light blue */
+}
+
+.footer-contact .socials {
+  margin-top: 0.5rem;
+}
+
+.footer-contact .socials a {
+  margin-right: 10px;
+  color: #cbd5e1;
+  font-size: 1.2rem;
+  transition: color 0.2s ease;
+}
+
+.footer-contact .socials a:hover {
+  color: #38bdf8;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid #334155;
+  font-size: 0.9rem;
+}
+.socials {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.social-name {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.socials a {
+  color: #0a66c2; /* LinkedIn blue */
+  font-size: 20px;
+  transition: color 0.3s ease;
+}
+
+.socials a:hover {
+  color: #004182;
+}

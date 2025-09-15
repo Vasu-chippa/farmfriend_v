@@ -1,0 +1,197 @@
+/* apps/frontend/src/pages/Farmer/Harvest/CropRecords.css */
+
+.crop-records-page {
+  display: flex;
+  gap: 24px;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.left-panel {
+  width: 34%;
+}
+
+.right-panel {
+  width: 66%;
+}
+
+.back-btn {
+  background: #74ffae;
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+}
+
+.crop-card {
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #fff;
+}
+
+.crop-image {
+  width: 140px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.crop-info h2 {
+  margin: 0 0 8px;
+}
+
+.records-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.add-btn {
+  background: #2b8a3e;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.add-btn:hover { opacity: 0.95; }
+
+.record-form {
+  background: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ececec;
+  margin-bottom: 16px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.form-row.full { grid-column: span 3; }
+
+.form-row label { font-size: 0.9rem; margin-bottom: 6px; color: #333; }
+
+.form-row input,
+.form-row textarea,
+.advanced-fields input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.advanced-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.toggle-btn {
+  margin: 8px 0;
+  background: #0d6efd;
+  color: white;
+  padding: 8px;
+  border: none;
+  width: 100%;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.save-btn {
+  background: #198754;
+  color: white;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.records-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.records-table th,
+.records-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f1f1f1;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.records-table th {
+  background: #e3ffd0;
+  font-weight: 600;
+}
+
+.icon-btn {
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 12px;
+}
+
+.icon-btn.edit { background: #ffc107; color: #fff; padding-left: 4px; }
+.icon-btn.delete { background: #dc3545; color: #fff; }
+
+.empty {
+  text-align: center;
+  color: #666;
+  padding: 12px 0;
+}
+
+.desc-cell {
+  text-align: left;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.desc-cell:hover {
+  overflow: visible;
+  white-space: normal;
+  background: #f9f9f9;
+  position: relative;
+  z-index: 1;
+  padding: 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+@media (max-width: 900px) {
+  .crop-records-page {
+    flex-direction: column;
+  }
+  .left-panel, .right-panel {
+    width: 100%;
+  }
+  .crop-image {
+    width: 100px;
+    height: 70px;
+  }
+  .advanced-fields {
+    grid-template-columns: 1fr;
+  }
+}

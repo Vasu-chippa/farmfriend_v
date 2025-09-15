@@ -1,0 +1,54 @@
+.notfound-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  font-family: "Poppins", sans-serif;
+}
+
+.notfound-content {
+  text-align: center;
+  padding: 30px;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.notfound-image {
+  width: 300px;
+  margin-bottom: 20px;
+}
+
+.notfound-content h1 {
+  font-size: 90px;
+  color: #e63946;
+  margin: 0;
+}
+
+.notfound-content h2 {
+  font-size: 26px;
+  margin: 10px 0;
+  color: #333;
+}
+
+.notfound-content p {
+  font-size: 18px;
+  color: #555;
+  margin-bottom: 25px;
+}
+
+.home-link {
+  display: inline-block;
+  padding: 12px 24px;
+  background: #457b9d;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: 0.3s ease;
+}
+
+.home-link:hover {
+  background: #1d3557;
+}

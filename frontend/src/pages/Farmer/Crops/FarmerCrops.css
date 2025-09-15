@@ -1,0 +1,114 @@
+/* ============================
+   Farmer Crops Page Styles
+   ============================ */
+.farmer-crops {
+  padding: 30px 20px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.farmer-crops h2 {
+  font-size: 32px;
+  margin-bottom: 30px;
+  color: #2c3e50;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+/* ====== Crop Grid ====== */
+.crop-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 25px;
+  padding: 10px 0;
+}
+
+/* ====== Crop Card ====== */
+.crop-card {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  padding: 18px;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+}
+
+/* Hover Animation */
+.crop-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Image with Smooth Zoom Effect */
+.crop-card img {
+  width: 100%;
+  height: 160px;
+  border-radius: 10px;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.crop-card:hover img {
+  transform: scale(1.08);
+}
+
+/* ====== Card Text ====== */
+.crop-card h3 {
+  font-size: 20px;
+  margin: 12px 0 6px;
+  color: #27ae60;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.crop-card:hover h3 {
+  color: #219150;
+}
+
+.crop-card p {
+  font-size: 14px;
+  margin: 3px 0;
+  color: #555;
+}
+
+/* Specific Styles */
+.crop-category {
+  font-weight: 500;
+  color: #2980b9;
+}
+
+.crop-quality {
+  font-weight: 500;
+  color: #27ae60;
+}
+
+.crop-availability {
+  font-size: 13px;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* ====== Animation Entrance ====== */
+.crop-card {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.crop-card:nth-child(1) { animation-delay: 0.1s; }
+.crop-card:nth-child(2) { animation-delay: 0.2s; }
+.crop-card:nth-child(3) { animation-delay: 0.3s; }
+.crop-card:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <meta
+      name="description"
+      content="Web site created using create-react-app"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- ✅ Added Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- ✅ Inline CSS for circular app logo -->
+    <style>
+      .app-logo {
+        width: 60px;          /* adjust size */
+        height: 60px;         /* keep equal for circle */
+        border-radius: 50%;   /* makes it circular */
+        object-fit: cover;    /* prevents stretching */
+        border: 2px solid #2e7d32; /* optional green border */
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); /* optional shadow */
+      }
+    </style>
+
+    <title>FarmFriend</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

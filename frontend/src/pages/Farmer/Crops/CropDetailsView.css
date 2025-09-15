@@ -1,0 +1,86 @@
+/* apps/frontend/src/pages/Farmer/Crops/CropDetailsView.css */
+.crop-details-view {
+  max-width: 800px;
+  margin: 40px auto;
+  background: #fff;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #3498db;
+  margin-bottom: 20px;
+}
+
+.crop-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.crop-header img {
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid #eee;
+}
+
+.crop-header h2 {
+  font-size: 28px;
+  color: #2c3e50;
+}
+
+.crop-info {
+  margin: 20px 0;
+  line-height: 1.8;
+  font-size: 16px;
+  color: #444;
+}
+
+.crop-info p {
+  margin: 6px 0;
+}
+
+.crop-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  background: #27ae60;
+  color: white;
+  transition: 0.3s;
+}
+
+.toggle-btn:hover {
+  background: #219150;
+}
+
+.harvest-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  background: #f39c12;
+  color: white;
+  transition: 0.3s;
+}
+
+.harvest-btn:hover {
+  background: #d68910;
+}
