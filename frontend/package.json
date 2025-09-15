@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://YOUR-USERNAME.github.io/farmfriend", 
+  "homepage": "https://2303A51618.github.io/ff", 
   "dependencies": {
     "@testing-library/jest-dom": "^6.1.6",
     "@testing-library/react": "^14.1.2",
