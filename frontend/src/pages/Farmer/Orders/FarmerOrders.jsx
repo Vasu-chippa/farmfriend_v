@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import API from "../../../services/api";
 
 const FarmerOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -7,7 +7,7 @@ const FarmerOrders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get("/api/orders/farmer", {
+      const { data } = await API.get("/orders/farmer", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setOrders(data);
@@ -17,8 +17,8 @@ const FarmerOrders = () => {
 
   const updateStatus = async (id, status) => {
     const token = localStorage.getItem("token");
-    await axios.put(
-      `/api/orders/${id}/status`,
+    await API.put(
+      `/orders/${id}/status`,
       { status },
       { headers: { Authorization: `Bearer ${token}` } }
     );

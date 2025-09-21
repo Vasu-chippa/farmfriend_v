@@ -6,7 +6,7 @@ import {
   updateRecord,
   deleteRecord,
 } from "../../../services/cropRecordService";
-import axios from "axios";
+import API from "../../../api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./CropRecords.css";
@@ -38,13 +38,13 @@ const CropRecords = () => {
   const fetchCrop = useCallback(async () => {
     if (!cropId) return;
     try {
-      const res = await axios.get(`http://localhost:5000/api/crops/${cropId}`, {
+      const res = await API.get(`/crops/${cropId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCrop(res.data);
     } catch (err) {
       try {
-        const res2 = await axios.get(`http://localhost:5000/api/harvest/${cropId}`, {
+        const res2 = await API.get(`/harvest/${cropId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCrop(res2.data);

@@ -1,6 +1,6 @@
 // frontend/src/pages/buyer/MyOrders.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import API from "../../../api";
 import BuyerSidebar from "../../../components/BuyerSidebar";
 import "./MyOrders.css";
 
@@ -12,7 +12,7 @@ const MyOrders = () => {
     const fetchOrders = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/buyers/orders", {
+        const res = await API.get("/buyers/orders", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setOrders(res.data);
@@ -29,7 +29,7 @@ const MyOrders = () => {
   const handleDelete = async (orderId) => {
     try {
       const token = localStorage.getItem("token");
-     await axios.delete(`http://localhost:5000/api/buyers/orders/${orderId}`, {
+     await API.delete(`/buyers/orders/${orderId}`, {
        headers: { Authorization: `Bearer ${token}` },
      });
 
@@ -46,11 +46,11 @@ const MyOrders = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(
-          `http://localhost:5000/api/buyers/orders/${orderId}`,
-           { quantity: Number(newQty) },
-           { headers: { Authorization: `Bearer ${token}` } }
-      );
+    const res = await API.put(
+      `/buyers/orders/${orderId}`,
+       { quantity: Number(newQty) },
+       { headers: { Authorization: `Bearer ${token}` } }
+    );
 
 
       setOrders(

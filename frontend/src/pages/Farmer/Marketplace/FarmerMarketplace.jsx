@@ -1,6 +1,6 @@
 // apps/frontend/src/pages/Farmer/Marketplace/FarmerMarketplace.jsx
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import API from "../../../api";
 import { useNavigate } from "react-router-dom";
 import "./FarmerMarketplace.css";
 
@@ -28,7 +28,7 @@ function FarmerMarketplace() {
   const fetchProducts = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/farmers/products", {
+      const res = await API.get("/farmers/products", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProducts(res.data);
@@ -65,14 +65,14 @@ function FarmerMarketplace() {
     try {
       const token = localStorage.getItem("token");
       if (editProduct) {
-        await axios.put(
-          `http://localhost:5000/api/farmers/products/${editProduct._id}`,
+        await API.put(
+          `/farmers/products/${editProduct._id}`,
           data,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         alert("✅ Product updated!");
       } else {
-        await axios.post("http://localhost:5000/api/farmers/products", data, {
+        await API.post("/farmers/products", data, {
           headers: { Authorization: `Bearer ${token}` }
         });
         alert("✅ Product added!");
@@ -114,7 +114,7 @@ function FarmerMarketplace() {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/farmers/products/${id}`, {
+      await API.delete(`/farmers/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert("🗑️ Product deleted!");

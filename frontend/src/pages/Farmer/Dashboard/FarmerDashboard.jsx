@@ -1,7 +1,7 @@
 // farmfriend/apps/frontend/src/pages/Farmer/Dashboard/FarmerDashboard.jsx
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import API from "../../../api";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import "./FarmerDashboard.css";
 
@@ -20,9 +20,9 @@ const FarmerDashboard = () => {
     const fetchStats = async () => {
       try {
         const [cropsRes, expensesRes, harvestRes] = await Promise.all([
-          axios.get("/api/crops/mycrops"),
-          axios.get("/api/expenses"),
-          axios.get("/api/harvest"),
+          API.get("/crops/mycrops"),
+          API.get("/expenses"),
+          API.get("/harvest"),
         ]);
 
         const totalCrops = cropsRes.data.length;

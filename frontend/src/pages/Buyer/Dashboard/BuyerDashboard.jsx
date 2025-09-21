@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BuyerSidebar from "../../../components/BuyerSidebar";
-import axios from "axios";
+//import axios from "axios";
+import API from "../../../api";
 import {
   LineChart,
   Line,
@@ -27,7 +28,7 @@ const BuyerDashboard = () => {
     const fetchOrders = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/buyers/orders", {
+        const res = await API.get("/buyers/orders", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setOrders(res.data);

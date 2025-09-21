@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import API from "../../../api";
 import "./FarmerExpense.css";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -23,8 +23,8 @@ function ExpenseTracker() {
 
   const fetchExpenses = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/farmers/expenses");
-      setExpenses(res.data);
+  const res = await API.get("/farmers/expenses");
+  setExpenses(res.data);
     } catch (err) {
       console.error("❌ Error fetching expenses:", err);
     }
@@ -38,11 +38,11 @@ function ExpenseTracker() {
     e.preventDefault();
     try {
       if (editId) {
-        await axios.put(`http://localhost:5000/api/farmers/expenses/${editId}`, formData);
-        alert("✅ Expense updated");
+  await API.put(`/farmers/expenses/${editId}`, formData);
+  alert("✅ Expense updated");
       } else {
-        await axios.post("http://localhost:5000/api/farmers/expenses", formData);
-        alert("✅ Expense added");
+  await API.post("/farmers/expenses", formData);
+  alert("✅ Expense added");
       }
       setFormData({ cropName: "", category: "Seeds", amount: "", date: "", description: "" });
       setEditId(null);
@@ -67,7 +67,7 @@ function ExpenseTracker() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this expense?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/farmers/expenses/${id}`);
+  await API.delete(`/farmers/expenses/${id}`);
       alert("🗑️ Expense deleted");
       fetchExpenses();
     } catch (err) {

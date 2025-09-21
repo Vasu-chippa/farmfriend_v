@@ -1,7 +1,8 @@
 // src/pages/Buyer/CropPurchase.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+//import axios from "axios";
+import API from "../../../api";
 import BuyerSidebar from "../../../components/BuyerSidebar";
 import "./CropPurchase.css";
 
@@ -15,7 +16,7 @@ function CropPurchase() {
     const fetchProduct = async () => {
       try {
         // ✅ Use same route style as Marketplace
-        const res = await axios.get(`http://localhost:5000/api/marketplace/${id}`);
+        const res = await API.get(`/marketplace/${id}`);
         setProduct(res.data);
       } catch (err) {
         console.error("❌ Error fetching product:", err);
@@ -27,8 +28,8 @@ function CropPurchase() {
   const placeOrder = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
-        "http://localhost:5000/api/buyers/orders",
+      await API.post(
+        "/buyers/orders",
         { productId: product._id, quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );

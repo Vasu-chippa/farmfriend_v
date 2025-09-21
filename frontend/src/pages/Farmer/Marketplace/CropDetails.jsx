@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import API from "../../../api";
 import "./CropDetails.css";
 
 function CropDetails() {
@@ -15,14 +15,14 @@ function CropDetails() {
     const fetchCrop = async () => {
       try {
         // 🔹 Try public crop API first
-        let res = await axios.get(`http://localhost:5000/api/crops/${id}`);
+  let res = await API.get(`/crops/${id}`);
         setCrop(res.data);
       } catch (err) {
         try {
           // 🔹 If not found, fallback to farmer’s product API
           const token = localStorage.getItem("token");
-          let res = await axios.get(
-            `http://localhost:5000/api/farmers/products/${id}`,
+          let res = await API.get(
+            `/farmers/products/${id}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setCrop(res.data);

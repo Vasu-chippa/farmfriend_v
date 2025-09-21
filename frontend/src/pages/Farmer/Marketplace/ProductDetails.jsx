@@ -1,7 +1,7 @@
 // apps/frontend/src/pages/Farmer/Marketplace/ProductDetails.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import API from "../../../api";
 import "./FarmerMarketplace.css";
 
 function ProductDetails() {
@@ -12,7 +12,7 @@ function ProductDetails() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/farmers/products/${id}`);
+  const res = await API.get(`/api/farmers/products/${id}`);
         setProduct(res.data);
       } catch (err) {
         console.error("Error fetching product details", err);

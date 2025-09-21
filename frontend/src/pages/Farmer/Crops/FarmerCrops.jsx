@@ -1,6 +1,6 @@
 // apps/frontend/src/pages/Farmer/Crops/FarmerCrops.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import API from "../../../api";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import "./FarmerCrops.css";
@@ -13,7 +13,7 @@ const FarmerCrops = () => {
   // Fetch all crops
   const fetchCrops = useCallback(async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/crops", {
+      const res = await API.get("/crops", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCrops(res.data);
@@ -36,7 +36,8 @@ const FarmerCrops = () => {
             className="crop-card"
             whileHover={{ scale: 1.03 }}
             transition={{ type: "spring", stiffness: 200 }}
-            onClick={() => navigate(`/farmer/cropdetailsview/${crop._id}`)}
+            onClick={() => navigate(`/farmer/crop-details/${crop._id}`)}
+
           >
            <img
   src={`${process.env.PUBLIC_URL}/cropimages/${crop.name.toLowerCase()}.jpeg`}

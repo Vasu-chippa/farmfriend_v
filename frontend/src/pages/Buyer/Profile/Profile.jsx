@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import API from "../../../api";
 import BuyerSidebar from "../../../components/BuyerSidebar";
 import "./Profile.css";
 
@@ -9,8 +9,8 @@ const Profile = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    axios
-      .get("http://localhost:5000/api/buyers/profile", {
+    API
+      .get("/buyers/profile", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -30,8 +30,8 @@ const Profile = () => {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
-        "http://localhost:5000/api/buyers/profile",
+      await API.put(
+        "/buyers/profile",
         {
           fullName: profile.fullName,
           company: profile.company,

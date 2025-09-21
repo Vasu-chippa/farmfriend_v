@@ -1,6 +1,6 @@
 // src/pages/Buyer/Marketplace.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import API from "../../../api";
 import { useNavigate } from "react-router-dom";
 import "./Marketplace.css";
 
@@ -12,7 +12,7 @@ const Marketplace = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/marketplace");
+  const res = await API.get("/marketplace");
         setProducts(res.data || []);
       } catch (err) {
         console.error("Error fetching marketplace items:", err);
