@@ -1,20 +1,18 @@
+// backend/src/models/Expense.js
 import mongoose from "mongoose";
 
 const expenseSchema = new mongoose.Schema(
   {
-    cropName: { type: String, required: [true, "Crop name is required"] },
+    farmer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // 👈 link to farmer
+    cropName: { type: String, required: true },
     category: { 
       type: String, 
-      required: [true, "Category is required"], 
-      enum: ["Seeds", "Fertilizer", "Labor", "Transport", "Water", "Equipment", "Others"] // ✅ allowed values
+      required: true, 
+      enum: ["Seeds", "Fertilizer", "Labor", "Transport", "Water", "Equipment", "Others"]
     },
-    amount: { 
-      type: Number, 
-      required: [true, "Amount is required"], 
-      min: [1, "Amount must be at least 1"] 
-    },
-    date: { type: Date, required: [true, "Date is required"] },
-    description: { type: String, maxlength: 200 }, // optional
+    amount: { type: Number, required: true },
+    date: { type: Date, required: true },
+    description: { type: String, maxlength: 200 },
   },
   { timestamps: true }
 );
