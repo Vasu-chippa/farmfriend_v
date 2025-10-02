@@ -1,1015 +1,903 @@
- Provide backend controller updates for getAgentDashboard, listProductsForAgent, getOrdersForAgent, getAgentFarmers, getAgentProfile (I can generate code that fits your models).
-
- Integrate an AgentLayout wrapper (wraps sidebar + main + top header).
-
- Add realtime refresh via websockets (optional).
-
- Add export (CSV/PDF) on Farmers / Orders pages.
-
- Add a toggle to show/hide sidebar on small screens
-
- focus on above points.
-
- ___________________________
-
- just look on these if any change need tell me 
- import mongoose from "mongoose";
-
-const cropSchema = new mongoose.Schema({
-  farmer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  name: { type: String, required: true },
-  description: { type: String },
-  price: { type: Number, required: true },
-  quantity: { type: Number, required: true },
-  image: { type: String, default: "" }, // ✅ keep single image for now
-  status: {
-    type: String,
-    enum: ["Active", "Completed", "Hold"],
-    default: "Active",
-  },
-  profit: { type: Number, default: 0 },
-  dateAdded: { type: Date, default: Date.now },
-  dateCompleted: { type: Date },
-});
-
-export default mongoose.model("Crop", cropSchema);
-___________________________
-import mongoose from "mongoose";
-
-const orderSchema = new mongoose.Schema(
-  {
-    buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-    quantity: { type: Number, required: true },
-    price: { type: Number, required: true }, // price per unit at time of order
-    total: { type: Number, required: true },
-    status: {
-      type: String,
-      enum: ["Pending", "Completed", "Cancelled"],
-      default: "Pending",
-    },
-  },
-  { timestamps: true }
-);
-
-const Order = mongoose.model("Order", orderSchema);
-export default Order;
-___________________________
-
-// backend/src/models/User.js
-import mongoose from "mongoose";
-
-const userSchema = new mongoose.Schema(
-  {
-    fullName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: {
-      type: String,
-      enum: ["farmer", "buyer", "agent", "admin"],
-      default: "farmer",
-    },
-  },
-  { timestamps: true }
-);
-
-export default mongoose.model("User", userSchema);
-__________________________________
-// apps/backend/src/models/Agent.js
-import mongoose from "mongoose";
+import Agent from "../models/Agent.js";
+import User from "../models/User.js";
+import Order from "../models/Order.js";
+import Product from "../models/Product.js";
+import Crop from "../models/Crop.js";
 import bcrypt from "bcryptjs";
 
-const agentSchema = new mongoose.Schema({
-  fullName: { type: String, required: true, trim: true },
-  email: { type: String, required: true, lowercase: true, unique: true },
-  password: { type: String, required: true },
-  phone: { type: String },
-  region: { type: String },
-  commissionEarned: { type: Number, default: 0 },
-  role: { type: String, default: "agent" },
-  createdAt: { type: Date, default: Date.now },
-});
-
-// Hash password when saving (only if modified)
-agentSchema.pre("save", async function(next) {
-  if (!this.isModified("password")) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
-// method to compare password
-agentSchema.methods.matchPassword = async function(enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-export default mongoose.model("Agent", agentSchema);
-___________________________
-
-// backend/src/models/Buyer.js
-import mongoose from "mongoose";
-
-const buyerSchema = new mongoose.Schema(
-  {
-    fullName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    company: { type: String },
-    role: { type: String, default: "buyer" }
-  },
-  { timestamps: true }
-);
-
-const Buyer = mongoose.model("Buyer", buyerSchema);
-export default Buyer;
-__________________________________
-// backend/src/models/Product.js
-import mongoose from "mongoose";
-
-const productSchema = new mongoose.Schema(
-  {
-    farmer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    name: { type: String, required: true },
-    description: { type: String },
-    price: { type: Number, required: true },
-    quantity: { type: Number, required: true },
-    quality: { type: String },
-    isOrganic: { type: Boolean, default: false },
-    images: [{ type: String }],
-  },
-  { timestamps: true }
-);
-
-export default mongoose.model("Product", productSchema);
-_______________________________________
-import mongoose from "mongoose";
-
-const harvestSchema = new mongoose.Schema(
-  {
-    farmer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    crops: [
-      {
-        cropId: { type: mongoose.Schema.Types.ObjectId, ref: "Crop", required: true },
-        name: String,
-        price: Number,
-        quantity: Number,
-        image: String,
-        category: String,
-        quality: String,
-      },
-    ],
-  },
-  { timestamps: true }
-);
-
-export default mongoose.model("Harvest", harvestSchema);
-__________________________________
-import mongoose from "mongoose";
-
-const orderSchema = new mongoose.Schema(
-  {
-    buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-    quantity: { type: Number, required: true },
-    price: { type: Number, required: true }, // price per unit at time of order
-    total: { type: Number, required: true },
-    status: {
-      type: String,
-      enum: ["Pending", "Completed", "Cancelled"],
-      default: "Pending",
-    },
-  },
-  { timestamps: true }
-);
-
-const Order = mongoose.model("Order", orderSchema);
-export default Order;
-___________________________
-
-look on these.
-___________________________
-// apps/backend/server.js
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-import morgan from "morgan";
-import mongoose from "mongoose";
-import path from "path";
-import { fileURLToPath } from "url";
-
-// Import routes
-import adminRoutes from "./src/routes/adminRoutes.js";
-import agentRoutes from "./src/routes/agentRoutes.js";
-import authRoutes from "./src/routes/authRoutes.js";
-import buyerRoutes from "./src/routes/buyerRoutes.js";
-import farmerRoutes from "./src/routes/farmerRoutes.js";
-import harvestRoutes from "./src/routes/harvestRoutes.js";
-import cropRecordRoutes from "./src/routes/cropRecordRoutes.js";
-import cropRoutes from "./src/routes/cropRoutes.js";
-import orderRoutes from "./src/routes/orderRoutes.js";
-import productRoutes from "./src/routes/productRoutes.js";
-
-// Load environment variables
-dotenv.config();
-
-// Initialize express app
-const app = express();
-
-// Middleware
-app.use(express.json());
-app.use(cors());
-app.use(morgan("dev"));
-
-// Static folder for uploaded images
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use("/uploads", express.static(path.join(__dirname, "src", "uploads")));
-
-// Health check route
-app.get("/", (req, res) => {
-  res.send("✅ FarmFriend Backend is running...");
-});
-
-// Routes
-app.use("/api/orders", orderRoutes);
-app.use("/api/admins", adminRoutes);
-app.use("/api/agents", agentRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/buyers", buyerRoutes);
-app.use("/api/farmers", farmerRoutes);
-app.use("/api/crops", cropRoutes);
-app.use("/api/harvest", harvestRoutes);
-app.use("/api/crop-records", cropRecordRoutes);
-app.use("/api/marketplace", productRoutes);
-
-// Database connection
-const connectDB = async () => {
+// =================== DASHBOARD ===================
+export const getAgentDashboard = async (req, res) => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+    const agentId = req.user._id;
+
+    const farmers = await User.countDocuments({ role: "farmer" });
+    const crops = await Crop.countDocuments({});
+    const pendingOrders = await Order.countDocuments({ status: "Pending" });
+    const completedOrders = await Order.countDocuments({ status: "Completed" });
+
+    res.json({
+      farmers,
+      crops,
+      pendingOrders,
+      completedOrders,
     });
-    console.log("✅ MongoDB connected successfully");
   } catch (error) {
-    console.error("❌ MongoDB connection failed:", error.message);
-    // ❌ Don't exit directly on Render; let it retry
+    res.status(500).json({ message: "Error fetching agent dashboard", error: error.message });
   }
 };
 
-connectDB();
-
-// Server listening
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-__________________________________
-
-also add the that imports in app.js of agent
-/* apps/frontend/src/App.js */
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
-
-// Guards
-import RequireAuth from "./components/guards/RequireAuth";
-
-// Layouts
-import AdminLayout from "./layouts/AdminLayout";
-import BuyerLayout from "./layouts/BuyerLayout";
-
-// Home
-import Home from "./pages/Home/Home";
-import NotFound from "./pages/NotFound/NotFound";
-
-// Auth Pages
-import FarmerLogin from "./pages/Auth/FarmerLogin/FarmerLogin";
-import FarmerRegister from "./pages/Auth/FarmerRegister/FarmerRegister";
-import BuyerLogin from "./pages/Auth/BuyerLogin/BuyerLogin";
-import BuyerRegister from "./pages/Auth/BuyerRegister/BuyerRegister";
-import AgentLogin from "./pages/Auth/AgentLogin/AgentLogin";
-import AdminLogin from "./pages/Auth/AdminLogin/AdminLogin";
-
-// Farmer Section
-import FarmerDashboard from "./pages/Farmer/Dashboard/FarmerDashboard";
-import FarmerCrops from "./pages/Farmer/Crops/FarmerCrops";
-import HarvestList from "./pages/Farmer/Harvest/HarvestList";
-import CropDetailsView from "./pages/Farmer/Crops/CropDetailsView";
-import CropDetails from "./pages/Farmer/Marketplace/CropDetails";
-import ExpenseTracker from "./pages/Farmer/ExpenseTracker/ExpenseTracker";
-import FarmerMarketplace from "./pages/Farmer/Marketplace/FarmerMarketplace";
-import FarmerProfile from "./pages/Farmer/Profile/FarmerProfile";
-import CropRecords from "./pages/Farmer/Harvest/CropRecords";
-
-// Buyer Section
-import BuyerDashboard from "./pages/Buyer/Dashboard/BuyerDashboard";
-import Marketplace from "./pages/Buyer/Marketplace/Marketplace";
-import CropPurchase from "./pages/Buyer/CropPurchase/CropPurchase";
-import MyOrders from "./pages/Buyer/Orders/MyOrders";
-import Profile from "./pages/Buyer/Profile/Profile";
-
-// Agent Section
-import AgentDashboard from "./pages/Agent/Dashboard/AgentDashboard";
-
-// Admin Section
-import AdminDashboard from "./pages/Admin/Dashboard/AdminDashboard";
-import FarmersList from "./pages/Admin/FarmersList";
-import BuyersList from "./pages/Admin/BuyersList";
-import AgentsList from "./pages/Admin/AgentsList";
-
-function App() {
-  return (
-    <>
-      <Navbar />
-      <Routes>
-        {/* Home */}
-        <Route path="/" element={<Home />} />
-
-        {/* Auth */}
-        <Route path="/farmer/login" element={<FarmerLogin />} />
-        <Route path="/farmer/register" element={<FarmerRegister />} />
-        <Route path="/buyer/login" element={<BuyerLogin />} />
-        <Route path="/buyer/register" element={<BuyerRegister />} />
-        <Route path="/agent/login" element={<AgentLogin />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
-
-        {/* Farmer Protected Routes */}
-        <Route
-          path="/farmer/dashboard"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <FarmerDashboard />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/crops"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <FarmerCrops />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/harvest"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <HarvestList />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/crop-details/:id"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <CropDetailsView />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/expenses"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <ExpenseTracker />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/marketplace"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <FarmerMarketplace />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/marketplace/:id"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <CropDetails />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/profile"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <FarmerProfile />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/crop-records/:cropId"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <CropRecords />
-            </RequireAuth>
-          }
-        />
-
-        {/* Buyer Protected Routes */}
-        <Route
-          path="/buyer/dashboard"
-          element={
-            <RequireAuth allowedRoles={["buyer"]} redirectTo="/buyer/login">
-              <BuyerLayout>
-                <BuyerDashboard />
-              </BuyerLayout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/buyer/marketplace"
-          element={
-            <RequireAuth allowedRoles={["buyer"]} redirectTo="/buyer/login">
-              <BuyerLayout>
-                <Marketplace />
-              </BuyerLayout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/buyer/marketplace/:id"
-          element={
-            <RequireAuth allowedRoles={["buyer"]} redirectTo="/buyer/login">
-              <BuyerLayout>
-                <CropPurchase />
-              </BuyerLayout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/buyer/orders"
-          element={
-            <RequireAuth allowedRoles={["buyer"]} redirectTo="/buyer/login">
-              <BuyerLayout>
-                <MyOrders />
-              </BuyerLayout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/buyer/profile"
-          element={
-            <RequireAuth allowedRoles={["buyer"]} redirectTo="/buyer/login">
-              <BuyerLayout>
-                <Profile />
-              </BuyerLayout>
-            </RequireAuth>
-          }
-        />
-
-        {/* Agent */}
-        <Route
-          path="/agent/dashboard"
-          element={
-            <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
-              <AgentDashboard />
-            </RequireAuth>
-          }
-        />
-
-        {/* Admin */}
-        <Route
-          element={
-            <RequireAuth allowedRoles={["admin"]} redirectTo="/admin/login" />
-          }
-        >
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="farmers" element={<FarmersList />} />
-            <Route path="buyers" element={<BuyersList />} />
-            <Route path="agents" element={<AgentsList />} />
-          </Route>
-        </Route>
-
-        {/* Not Found */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </>
-  );
-}
-
-export default App;
-__________________________________
-
-as a agent i want look into the 
-1.->dashboard shows pending orders , completed orders,   etc like that.
-2-> farmer page shows a btn at top right side add farmer means he can add directly with register form of farmer, and edit existing farmer details (like password , address etc).
-at the famrers page show farmer table with his details with location , name, email, phno , age , crops harveset etc in a table . also keep an option search bar if possible .
-he can view who are harvesting these crops (ex : maize is harvesting ny 20 farmers, beans by 32 farmers   etc like that.)
-compalints displayed on feedback section.
-suggest me here more features , responsibilities.
-
-3->  create agentbuyer page , then it shows
-same like agentfarmers , suggest me more features , responsibilities..
-4-> in Agentorders page shows the pending orders by one by one FCFS model.
- he can click on approved/rejected or something the oder status will  be completed/Cancelled.
- suggest me here 
- ___________________________
-
-5-> also create a  payment section with minimal features
-
-6-> in agentprofile he can view his details like name , mail, phno, addrss, update password, or edit his details
-___________________________
-
-i want to insert an agent(mailid, password) through project terminal(vscode terminal project root). explain the steps .
-_______________________________________
-
-
-
-
-
-
-
-
-//ff/backend/scripts/createAgent.js
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-import Agent from "../src/models/Agent.js";
-
-dotenv.config();
-
-const createAgent = async () => {
+// =================== FARMERS ===================
+export const getAgentFarmers = async (req, res) => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    const farmers = await User.find({ role: "farmer" }).select("-password");
+    res.json(farmers);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching farmers", error: error.message });
+  }
+};
 
-    const agent = new Agent({
-      fullName: "agentone",
-      email: "agentone@gmail.com",
-      password: "agentone",
-      phone: "90000000",
-      region: "Mulugu"
-    });
+export const addFarmerByAgent = async (req, res) => {
+  try {
+    const { fullName, email, password, phone, age, address } = req.body;
+
+    const exists = await User.findOne({ email });
+    if (exists) return res.status(400).json({ message: "Farmer already exists" });
+
+    const hashed = await bcrypt.hash(password, 10);
+    const farmer = new User({ fullName, email, password: hashed, role: "farmer", phone, age, address });
+    await farmer.save();
+
+    res.status(201).json({ message: "Farmer added successfully", farmer });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding farmer", error: error.message });
+  }
+};
+
+// =================== PRODUCTS ===================
+export const listProductsForAgent = async (req, res) => {
+  try {
+    const products = await Product.find().populate("farmer", "fullName email");
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching products", error: error.message });
+  }
+};
+
+// =================== ORDERS ===================
+export const getOrdersForAgent = async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate("buyer", "fullName email")
+      .populate("product", "name price");
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching orders", error: error.message });
+  }
+};
+
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    order.status = status;
+    await order.save();
+
+    res.json({ message: "Order status updated", order });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating order", error: error.message });
+  }
+};
+
+// =================== PROFILE ===================
+export const getAgentProfile = async (req, res) => {
+  try {
+    const agent = await Agent.findById(req.user._id).select("-password");
+    res.json(agent);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching profile", error: error.message });
+  }
+};
+
+export const updateAgentProfile = async (req, res) => {
+  try {
+    const agent = await Agent.findById(req.user._id);
+    if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+    const { fullName, phone, region, password } = req.body;
+    if (fullName) agent.fullName = fullName;
+    if (phone) agent.phone = phone;
+    if (region) agent.region = region;
+    if (password) {
+      agent.password = await bcrypt.hash(password, 10);
+    }
 
     await agent.save();
-    console.log("✅ Agent created:", agent.email);
-    process.exit();
-  } catch (err) {
-    console.error("❌ Error creating agent:", err.message);
-    process.exit(1);
-  }
-};
-
-createAgent();
-
-
-
-PS C:\Users\PC\Documents\web projects\ff\ffv1\ff> cd backend
-PS C:\Users\PC\Documents\web projects\ff\ffv1\ff\backend> node scripts/createAgent.js
-❌ Error creating agent: E11000 duplicate key error collection: farmfriend.agents index: email_1 dup key: { email: "agent1@example.com" }
-PS C:\Users\PC\Documents\web projects\ff\ffv1\ff\backend> node scripts/createAgent.js
-❌ Error creating agent: E11000 duplicate key error collection: farmfriend.agents index: email_1 dup key: { email: "agent1@example.com" }
-PS C:\Users\PC\Documents\web projects\ff\ffv1\ff\backend> node scripts/createAgent.js
-✅ Agent created: agentone@gmail.com
-PS C:\Users\PC\Documents\web projects\ff\ffv1\ff\backend> 
-
-when i hit login with these credentials shows login failed , why? can u read these files
-______________
-// apps/backend/src/middlewares/authMiddleware.js
-import jwt from "jsonwebtoken";
-
-/**
- * protect middleware:
- * - verifies token
- * - sets req.user = { _id, id, role } (normalized)
- */
-export const protect = (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "No token, authorization denied" });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // normalized user object: always provide _id
-    req.user = {
-      ...decoded,
-      _id: decoded._id || decoded.id || decoded.userId || decoded.uid,
-    };
-
-    next();
+    res.json({ message: "Profile updated", agent });
   } catch (error) {
-    console.error("Auth protect error:", error.message);
-    return res.status(401).json({ message: "Invalid or expired token" });
+    res.status(500).json({ message: "Error updating profile", error: error.message });
   }
-};
-
-// restrict roles
-export const authorizeRoles = (...roles) => (req, res, next) => {
-  if (!req.user || !roles.includes(req.user.role)) {
-    return res.status(403).json({ message: "Access denied: insufficient role" });
-  }
-  next();
 };
 _______________________________________
-import User from "../models/User.js";
-import { generateToken } from "../utils/generateToken.js";
+// backend/src/controllers/farmerController.js
+import Farmer from "../models/User.js";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-// @desc    Register a new user (farmer, buyer, agent, admin)
-// @route   POST /api/auth/register
-// @access  Public
-export const registerUser = async (req, res) => {
-  try {
-    const { fullName, email, password, role, landSize } = req.body;
+// ✅ New imports for stats
+import Crop from "../models/Crop.js";
+import Harvest from "../models/Harvest.js";
+import Expense from "../models/Expense.js";
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+// Generate JWT
+const generateToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
+};
+
+// Register a farmer
+export const registerFarmer = async (req, res) => {
+  try {
+    const { fullName, email, password } = req.body;
+
+    // Check if farmer already exists
+    const existing = await Farmer.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ message: "Farmer already exists" });
     }
 
-    // ✅ Hash password before saving
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const farmer = new Farmer({ fullName, email, password, role: "farmer" });
+    await farmer.save();
 
-    const user = await User.create({
-      fullName,
-      email,
-      password: hashedPassword,
-      role,
-      landSize,
-    });
-
-    return res.status(201).json({
-      message: "User registered successfully",
-      token: generateToken(user._id, user.role),
-      user: {
-        _id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-      },
-    });
+    res
+      .status(201)
+      .json({ message: "Farmer registered successfully", farmer });
   } catch (error) {
-    return res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
-export const loginUser = async (req, res) => {
+// Login Farmer
+export const loginFarmer = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
+    const farmer = await Farmer.findOne({ email });
+    if (!farmer) {
+      return res.status(404).json({ message: "Farmer not found" });
     }
 
-    // ✅ Compare entered password with hashed password
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, farmer.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    return res.json({
+    res.json({
       message: "Login successful",
-      token: generateToken(user._id, user.role),
-      user: {
-        _id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-      },
+      token: generateToken(farmer._id, farmer.role),
+      farmer,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Get all farmers
+export const getFarmers = async (req, res) => {
+  try {
+    const farmers = await Farmer.find({ role: "farmer" });
+    res.json(farmers);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// 📊 Farmer Stats API
+export const getFarmerStats = async (req, res) => {
+  try {
+    const farmerId = req.user._id;
+
+    // Total Crops created by farmer
+    const totalCrops = await Crop.countDocuments({ farmer: farmerId });
+
+    // Harvest crops count
+    const harvest = await Harvest.findOne({ farmer: farmerId });
+    const totalHarvest = harvest ? harvest.crops.length : 0;
+
+    // Farmer’s expenses (⚠️ requires farmer field in Expense model)
+    const expenses = await Expense.find({ farmer: farmerId });
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+    // Total Income from harvest
+    const totalIncome = harvest
+      ? harvest.crops.reduce(
+          (sum, c) => sum + (c.price || 0) * (c.quantity || 0),
+          0
+        )
+      : 0;
+
+    // Profit or Loss
+    const profitOrLoss = totalIncome - totalExpenses;
+
+    res.json({
+      totalCrops,
+      totalHarvest,
+      totalExpenses,
+      totalIncome,
+      profitOrLoss,
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: "Failed to fetch stats",
+      details: err.message,
+    });
   }
 };
 _______________________________________
+// apps/backend/controllers/orderController.js
+import Order from "../models/Order.js";
 
-// apps/backend/server.js
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-import morgan from "morgan";
-import mongoose from "mongoose";
-import path from "path";
-import { fileURLToPath } from "url";
-
-// Import routes
-import adminRoutes from "./src/routes/adminRoutes.js";
-import agentRoutes from "./src/routes/agentRoutes.js";
-import authRoutes from "./src/routes/authRoutes.js";
-import buyerRoutes from "./src/routes/buyerRoutes.js";
-import farmerRoutes from "./src/routes/farmerRoutes.js";
-import harvestRoutes from "./src/routes/harvestRoutes.js";
-import cropRecordRoutes from "./src/routes/cropRecordRoutes.js";
-import cropRoutes from "./src/routes/cropRoutes.js";
-import orderRoutes from "./src/routes/orderRoutes.js";
-import productRoutes from "./src/routes/productRoutes.js";
-
-// Load environment variables
-dotenv.config();
-
-// Initialize express app
-const app = express();
-
-// Middleware
-app.use(express.json());
-app.use(cors());
-app.use(morgan("dev"));
-
-// Static folder for uploaded images
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use("/uploads", express.static(path.join(__dirname, "src", "uploads")));
-
-// Health check route
-app.get("/", (req, res) => {
-  res.send("✅ FarmFriend Backend is running...");
-});
-
-// Routes
-app.use("/api/orders", orderRoutes);
-app.use("/api/admins", adminRoutes);
-app.use("/api/agents", agentRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/buyers", buyerRoutes);
-app.use("/api/farmers", farmerRoutes);
-app.use("/api/crops", cropRoutes);
-app.use("/api/harvest", harvestRoutes);
-app.use("/api/crop-records", cropRecordRoutes);
-app.use("/api/marketplace", productRoutes);
-
-// Database connection
-const connectDB = async () => {
+// Create new order
+export const createOrder = async (req, res) => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("✅ MongoDB connected successfully");
+    const order = new Order(req.body);
+    await order.save();
+    res.status(201).json(order);
   } catch (error) {
-    console.error("❌ MongoDB connection failed:", error.message);
-    // ❌ Don't exit directly on Render; let it retry
+    res.status(400).json({ error: error.message });
   }
 };
 
-connectDB();
+// Get all orders
+export const getOrders = async (req, res) => {
+  try {
+    const orders = await Order.find();
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
-// Server listening
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Get single order
+export const getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Update order status
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { status: req.body.status },
+      { new: true }
+    );
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    res.json(order);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+_______________________________________
+import Harvest from "../models/Harvest.js";
+
+// 📋 Get all harvest crops for logged-in farmer
+export const getHarvest = async (req, res) => {
+  try {
+    const harvest = await Harvest.findOne({ farmer: req.user._id }).populate(
+      "crops.cropId",
+      "name image price quantity isOrganic quality category"
+    );
+
+    if (!harvest) return res.json({ crops: [] });
+
+    res.json({ crops: harvest.crops });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ➕ Add a crop to harvest
+export const addCrop = async (req, res) => {
+  try {
+    const { cropId, name, price, quantity, image, category, quality } = req.body;
+
+    let harvest = await Harvest.findOne({ farmer: req.user._id });
+    if (!harvest) {
+      harvest = new Harvest({ farmer: req.user._id, crops: [] });
+    }
+
+    // avoid duplicates
+    if (harvest.crops.some((c) => c.cropId.toString() === cropId)) {
+      return res.status(400).json({ msg: "Crop already in harvest list" });
+    }
+
+    harvest.crops.push({ cropId, name, price, quantity, image, category, quality });
+    await harvest.save();
+
+    await harvest.populate("crops.cropId", "name image price quantity isOrganic quality category");
+
+    res.json({ msg: "Crop added", crops: harvest.crops });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ❌ Remove a crop from harvest
+export const removeCrop = async (req, res) => {
+  try {
+    const { cropId } = req.params;
+    let harvest = await Harvest.findOne({ farmer: req.user._id });
+    if (!harvest) return res.status(404).json({ msg: "No harvest list found" });
+
+    harvest.crops = harvest.crops.filter((c) => c.cropId.toString() !== cropId);
+    await harvest.save();
+
+    await harvest.populate("crops.cropId", "name image price quantity isOrganic quality category");
+
+    res.json({ msg: "Crop removed", crops: harvest.crops });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// 📌 Get single harvest crop by id
+export const getSingleHarvest = async (req, res) => {
+  try {
+    const harvest = await Harvest.findOne({ farmer: req.user._id }).populate(
+      "crops.cropId",
+      "name image price quantity isOrganic quality category"
+    );
+
+    if (!harvest) return res.status(404).json({ message: "Harvest not found" });
+
+    const crop = harvest.crops.find((c) => c.cropId._id.toString() === req.params.id);
+
+    if (!crop) return res.status(404).json({ message: "No crop found" });
+
+    res.json(crop);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+_______________________________________
+import Harvest from "../models/Harvest.js";
+
+// Get all crops uploaded by farmers (for marketplace)
+export const getMarketplaceCrops = async (req, res) => {
+  try {
+    const crops = await Harvest.find()
+      .populate("farmer", "name email") // shows farmer info
+      .sort({ createdAt: -1 });
+    res.json(crops);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to load marketplace crops", error });
+  }
+};
 ___________________________
-import React, { useState } from "react";
-import axios from "axios";
-import "../Auth.css";  // ✅ common css
+import express from "express";
+import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
+import {
+  getAgentDashboard,
+  getAgentFarmers,
+  addFarmerByAgent,
+  listProductsForAgent,
+  getOrdersForAgent,
+  updateOrderStatus,
+  getAgentProfile,
+  updateAgentProfile
+} from "../controllers/agentController.js";
+import { loginAgent } from "../controllers/agentAuthController.js";
 
-function AgentLogin() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
-  const handleSubmit = async (e) => {
+const router = express.Router();
+router.post("/login", loginAgent);
+router.get("/dashboard", protect, authorizeRoles("agent"), getAgentDashboard);
+
+router.get("/farmers", protect, authorizeRoles("agent"), getAgentFarmers);
+router.post("/farmers", protect, authorizeRoles("agent"), addFarmerByAgent);
+
+router.get("/products", protect, authorizeRoles("agent"), listProductsForAgent);
+
+router.get("/orders", protect, authorizeRoles("agent"), getOrdersForAgent);
+router.put("/orders/:id", protect, authorizeRoles("agent"), updateOrderStatus);
+
+router.get("/profile", protect, authorizeRoles("agent"), getAgentProfile);
+router.put("/profile", protect, authorizeRoles("agent"), updateAgentProfile);
+
+export default router;
+___________________________
+// backend/src/routes/farmerRoutes.js
+import express from "express";
+import upload from "../middlewares/upload.js";
+import Product from "../models/Product.js";
+import Expense from "../models/Expense.js";
+import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
+
+const router = express.Router();
+
+/* =====================================================
+   FARMER PRODUCTS CRUD
+===================================================== */
+
+/**
+ * @route   POST /api/farmers/products
+ * @desc    Add new product (farmer only)
+ */
+router.post("/products", protect, authorizeRoles("farmer"), upload.array("images"), async (req, res) => {
+  try {
+    const { name, description, price, quantity, quality, organic } = req.body;
+    // Save all uploaded images
+    const images = req.files?.length > 0 ? req.files.map(f => "/uploads/" + f.filename) : [];
+
+    const product = new Product({
+      farmer: req.user._id,
+      name,
+      description,
+      price,
+      quantity,
+      quality,
+      isOrganic: organic === "true" || organic === true,
+      images,
+    });
+
+    await product.save();
+    res.status(201).json(product);
+  } catch (err) {
+    console.error("❌ Error saving product:", err);
+    res.status(500).json({ error: "Error saving product" });
+  }
+});
+
+/**
+ * @route   GET /api/farmers/products
+ * @desc    Fetch all products of logged-in farmer
+ */
+router.get("/products", protect, authorizeRoles("farmer"), async (req, res) => {
+  try {
+    const products = await Product.find({ farmer: req.user._id }).sort({ createdAt: -1 });
+    res.json(products);
+  } catch (err) {
+    console.error("❌ Error fetching products:", err);
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
+});
+
+/**
+ * @route   GET /api/farmers/products/:id
+ * @desc    Fetch single product details (farmer only)
+ */
+router.get("/products/:id", protect, authorizeRoles("farmer"), async (req, res) => {
+  try {
+    const product = await Product.findOne({ _id: req.params.id, farmer: req.user._id });
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    res.json(product);
+  } catch (err) {
+    console.error("❌ Error fetching product:", err);
+    res.status(500).json({ error: "Failed to fetch product" });
+  }
+});
+
+/**
+ * @route   PUT /api/farmers/products/:id
+ * @desc    Update product (farmer only)
+ */
+router.put("/products/:id", protect, authorizeRoles("farmer"), upload.array("images"), async (req, res) => {
+  try {
+    const { name, description, price, quantity, quality, organic } = req.body;
+    const updateData = { name, description, price, quantity, quality, isOrganic: organic === "true" || organic === true };
+    if (req.files && req.files.length > 0) {
+      updateData.images = req.files.map(f => "/uploads/" + f.filename);
+    }
+    const updated = await Product.findOneAndUpdate(
+      { _id: req.params.id, farmer: req.user._id },
+      updateData,
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ error: "Product not found" });
+    res.json(updated);
+  } catch (err) {
+    console.error("❌ Error updating product:", err);
+    res.status(500).json({ error: "Failed to update product" });
+  }
+});
+
+/**
+ * @route   DELETE /api/farmers/products/:id
+ * @desc    Delete product (farmer only)
+ */
+router.delete("/products/:id", protect, authorizeRoles("farmer"), async (req, res) => {
+  try {
+    const deleted = await Product.findOneAndDelete({ _id: req.params.id, farmer: req.user._id });
+    if (!deleted) return res.status(404).json({ error: "Product not found" });
+    res.json({ message: "🗑️ Product deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting product:", err);
+    res.status(500).json({ error: "Failed to delete product" });
+  }
+});
+
+/* =====================================================
+   FARMER EXPENSES CRUD
+===================================================== */
+
+/**
+ * @route   POST /api/farmers/expenses
+ * @desc    Add a new expense (farmer only)
+ */
+// backend/src/routes/farmerRoutes.js
+router.post("/expenses", protect, authorizeRoles("farmer"), async (req, res) => {
+  try {
+    const { cropName, category, amount, date, description } = req.body;
+
+    const expense = new Expense({
+      farmer: req.user._id,   // 👈 save logged-in farmer
+      cropName,
+      category,
+      amount,
+      date,
+      description,
+    });
+
+    await expense.save();
+    res.status(201).json(expense);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to add expense" });
+  }
+});
+
+
+/**
+ * @route   GET /api/farmers/expenses
+ * @desc    Fetch all expenses of logged-in farmer
+ */
+router.get("/expenses", protect, authorizeRoles("farmer"), async (req, res) => {
+  try {
+    const expenses = await Expense.find({ farmer: req.user._id }).sort({ date: -1 }); // 👈 only this farmer
+    res.json(expenses);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch expenses" });
+  }
+});
+
+/**
+ * @route   PUT /api/farmers/expenses/:id
+ */
+router.put("/expenses/:id", protect, authorizeRoles("farmer"), async (req, res) => {
+  try {
+    const updated = await Expense.findOneAndUpdate(
+      { _id: req.params.id, farmer: req.user._id }, // 👈 only update own expenses
+      req.body,
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ error: "Expense not found" });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update expense" });
+  }
+});
+
+
+/**
+ * @route   DELETE /api/farmers/expenses/:id
+ */
+router.delete("/expenses/:id", protect, authorizeRoles("farmer"), async (req, res) => {
+  try {
+    const deleted = await Expense.findOneAndDelete({ _id: req.params.id, farmer: req.user._id }); // 👈 only own
+    if (!deleted) return res.status(404).json({ error: "Expense not found" });
+    res.json({ message: "Expense deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete expense" });
+  }
+});
+
+
+export default router;
+_______________________________________
+import express from "express";
+import Order from "../models/Order.js";
+
+const router = express.Router();
+
+// ✅ Place order
+router.post("/", async (req, res) => {
+  try {
+    const { buyer, farmer, crop, quantity, price } = req.body;
+    const order = new Order({ buyer, farmer, crop, quantity, price });
+    await order.save();
+    res.status(201).json({ message: "✅ Order placed successfully", order });
+  } catch (error) {
+    console.error("❌ Error placing order:", error);
+    res.status(500).json({ error: "Failed to place order" });
+  }
+});
+
+// ✅ Get orders for a buyer
+router.get("/buyer/:buyerId", async (req, res) => {
+  try {
+    const orders = await Order.find({ buyer: req.params.buyerId })
+      .populate("crop", "name price images")
+      .populate("farmer", "fullName email");
+    res.json(orders);
+  } catch (error) {
+    console.error("❌ Error fetching buyer orders:", error);
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
+});
+
+export default router;
+_______________________________________
+// backend/routes/productRoutes.js
+import express from "express";
+import { getProducts, getProductById } from "../controllers/productController.js";
+
+const router = express.Router();
+
+// Public route for buyers (fetch all products)
+router.get("/", getProducts);
+
+// Public route for single product
+router.get("/:id", getProductById);
+
+export default router;
+_______________________________________
+// backend/src/routes/marketplaceRoutes.js
+import express from "express";
+import Product from "../models/Product.js";
+
+const router = express.Router();
+
+/**
+ * @route   GET /api/marketplace
+ * @desc    Get all products (for buyers)
+ */
+router.get("/", async (req, res) => {
+  try {
+    // Only show products with quantity > 0 (available)
+    const products = await Product.find({ quantity: { $gt: 0 } })
+      .populate("farmer", "name email")
+      .sort({ createdAt: -1 });
+    res.json(products);
+  } catch (error) {
+    console.error("Error fetching marketplace products:", error);
+    res.status(500).json({ error: "❌ Failed to fetch marketplace products" });
+  }
+});
+
+/**
+ * @route   GET /api/marketplace/:id
+ * @desc    Get product details (for buyers)
+ */
+router.get("/:id", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).populate("farmer", "name email");
+    if (!product) return res.status(404).json({ error: "❌ Product not found" });
+    res.json(product);
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    res.status(500).json({ error: "❌ Failed to fetch product" });
+  }
+});
+
+export default router;
+__________________________________
+// apps/frontend/src/pages/Agent/Farmers/AgentFarmers.jsx
+import React, { useEffect, useState } from "react";
+import API from "../../../api";
+//import AgentSidebar from "../../../components/AgentSidebar";
+import "../../../pages/Agent/Agent.css";
+import "./FarmersPage.css";
+import { motion } from "framer-motion";
+import { slideInLeft } from "../../Agent/animation";
+
+export default function AgentFarmers() {
+  const [farmers, setFarmers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({ fullName:"", email:"", phone:"", password:"" });
+
+  const fetchFarmers = async () => {
+    setLoading(true);
+    try {
+      const { data } = await API.get("/agents/farmers");
+      setFarmers(data || []);
+    } catch (err) {
+      console.error("fetch farmers error", err);
+      alert("Failed to fetch farmers");
+    } finally { setLoading(false); }
+  };
+
+  useEffect(()=> { fetchFarmers() }, []);
+
+  const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/agents/login", { email, password });
-      alert("Login successful");
+      await API.post("/agents/farmers", form);
+      setForm({ fullName:"", email:"", phone:"", password:"" });
+      setShowAdd(false);
+      fetchFarmers();
+      alert("Farmer created");
     } catch (err) {
-      alert("Login failed");
+      console.error("create farmer", err);
+      alert(err.response?.data?.message || "Failed to create");
+    }
+  };
+
+  const toggleVerify = async (farmerId, verify) => {
+    if (!window.confirm(`${verify ? "Verify" : "Unverify"} farmer?`)) return;
+    try {
+      await API.put("/agents/farmers/verify", { farmerId, verify });
+      fetchFarmers();
+    } catch (err) {
+      console.error("verify farmer", err);
+      alert("Failed to update farmer");
     }
   };
 
   return (
-    <div className="auth-container">
-      <h2>Agent Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-        <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
-        <button type="submit">Login</button>
-      </form>
+    <div className="agent-layout">
+     
+      <main className="agent-main">
+        <motion.div initial="hidden" animate="visible" variants={slideInLeft}>
+          <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12}}>
+            <h2>Farmers</h2>
+            <div>
+              <button className="btn" onClick={() => setShowAdd(s=>!s)}>{showAdd ? "Close" : "Add Farmer"}</button>
+            </div>
+          </div>
+
+          {showAdd && (
+            <form className="panel" onSubmit={handleCreate} style={{marginBottom:12}}>
+              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:10}}>
+                <input className="input" placeholder="Full name" value={form.fullName} onChange={(e)=>setForm({...form, fullName:e.target.value})} required />
+                <input className="input" placeholder="Email" value={form.email} onChange={(e)=>setForm({...form, email:e.target.value})} required />
+                <input className="input" placeholder="Phone" value={form.phone} onChange={(e)=>setForm({...form, phone:e.target.value})} />
+                <input className="input" placeholder="Password (temp)" value={form.password} onChange={(e)=>setForm({...form, password:e.target.value})} />
+              </div>
+              <div style={{marginTop:10}}>
+                <button className="btn" type="submit">Create</button>
+              </div>
+            </form>
+          )}
+
+          <div className="panel table">
+            {loading ? <p>Loading farmers...</p> :
+              <table>
+                <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Verified</th><th>Action</th></tr></thead>
+                <tbody>
+                  {farmers.length === 0 ? <tr><td colSpan={5}>No farmers assigned.</td></tr> :
+                    farmers.map(f => (
+                      <tr key={f._id}>
+                        <td>{f.fullName || f.name}</td>
+                        <td>{f.email}</td>
+                        <td>{f.phone || "-"}</td>
+                        <td>{f.verified ? <span className="tag-approved">Verified</span> : <span className="tag-pending">Pending</span>}</td>
+                        <td>
+                          <button className="btn secondary" onClick={()=>toggleVerify(f._id, !f.verified)}>
+                            {f.verified ? "Unverify" : "Verify"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        </motion.div>
+      </main>
     </div>
   );
 }
+______________
+// apps/frontend/src/pages/Agent/Orders/AgentOrders.jsx
+import React, { useEffect, useState } from "react";
+import API from "../../../api";
+//import AgentSidebar from "../../../components/AgentSidebar";
+import "../../../pages/Agent/Agent.css";
+import "./AgentOrders.css";
+import { motion } from "framer-motion";
+import { fadeInUp } from "../../Agent/animation";
 
-export default AgentLogin;
-__________________________________
-/* apps/frontend/src/App.js */
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
+export default function AgentOrders() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-// Guards
-import RequireAuth from "./components/guards/RequireAuth";
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const { data } = await API.get("/agents/orders");
+      setOrders(data || []);
+    } catch (err) {
+      console.error("fetch orders", err);
+      alert("Failed to fetch orders");
+    } finally { setLoading(false); }
+  };
 
-// Layouts
-import AdminLayout from "./layouts/AdminLayout";
-import BuyerLayout from "./layouts/BuyerLayout";
+  useEffect(()=> { fetchOrders() }, []);
 
-// Home
-import Home from "./pages/Home/Home";
-import NotFound from "./pages/NotFound/NotFound";
+  const approveOrder = async (id, approve) => {
+    if (!window.confirm(`${approve ? "Approve" : "Reject"} order?`)) return;
+    try {
+      await API.put(`/agents/orders/${id}/approve`, { approve });
+      fetchOrders();
+      alert("Order updated");
+    } catch (err) {
+      console.error("approve order", err);
+      alert("Failed to update");
+    }
+  };
 
-// Auth Pages
-import FarmerLogin from "./pages/Auth/FarmerLogin/FarmerLogin";
-import FarmerRegister from "./pages/Auth/FarmerRegister/FarmerRegister";
-import BuyerLogin from "./pages/Auth/BuyerLogin/BuyerLogin";
-import BuyerRegister from "./pages/Auth/BuyerRegister/BuyerRegister";
-import AgentLogin from "./pages/Auth/AgentLogin/AgentLogin";
-import AdminLogin from "./pages/Auth/AdminLogin/AdminLogin";
+  const changeStatus = async (id, status) => {
+    if (!window.confirm(`Set status to ${status}?`)) return;
+    try {
+      await API.put(`/agents/orders/${id}/status`, { status });
+      fetchOrders();
+      alert("Order status updated");
+    } catch (err) {
+      console.error("update status", err);
+      alert("Failed to update status");
+    }
+  };
 
-// Farmer Section
-import FarmerDashboard from "./pages/Farmer/Dashboard/FarmerDashboard";
-import FarmerCrops from "./pages/Farmer/Crops/FarmerCrops";
-import HarvestList from "./pages/Farmer/Harvest/HarvestList";
-import CropDetailsView from "./pages/Farmer/Crops/CropDetailsView";
-import CropDetails from "./pages/Farmer/Marketplace/CropDetails";
-import ExpenseTracker from "./pages/Farmer/ExpenseTracker/ExpenseTracker";
-import FarmerMarketplace from "./pages/Farmer/Marketplace/FarmerMarketplace";
-import FarmerProfile from "./pages/Farmer/Profile/FarmerProfile";
-import CropRecords from "./pages/Farmer/Harvest/CropRecords";
-
-// Buyer Section
-import BuyerDashboard from "./pages/Buyer/Dashboard/BuyerDashboard";
-import Marketplace from "./pages/Buyer/Marketplace/Marketplace";
-import CropPurchase from "./pages/Buyer/CropPurchase/CropPurchase";
-import MyOrders from "./pages/Buyer/Orders/MyOrders";
-import Profile from "./pages/Buyer/Profile/Profile";
-
-// Agent Section
-import AgentDashboard from "./pages/Agent/Dashboard/AgentDashboard";
-
-// Admin Section
-import AdminDashboard from "./pages/Admin/Dashboard/AdminDashboard";
-import FarmersList from "./pages/Admin/FarmersList";
-import BuyersList from "./pages/Admin/BuyersList";
-import AgentsList from "./pages/Admin/AgentsList";
-
-function App() {
   return (
-    <>
-      <Navbar />
-      <Routes>
-        {/* Home */}
-        <Route path="/" element={<Home />} />
+    <div className="agent-layout">
+      
+      <main className="agent-main">
+        <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
+          <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12}}>
+            <h2>Orders</h2>
+            <div><button className="btn" onClick={fetchOrders}>Refresh</button></div>
+          </div>
 
-        {/* Auth */}
-        <Route path="/farmer/login" element={<FarmerLogin />} />
-        <Route path="/farmer/register" element={<FarmerRegister />} />
-        <Route path="/buyer/login" element={<BuyerLogin />} />
-        <Route path="/buyer/register" element={<BuyerRegister />} />
-        <Route path="/agent/login" element={<AgentLogin />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
-
-        {/* Farmer Protected Routes */}
-        <Route
-          path="/farmer/dashboard"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <FarmerDashboard />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/crops"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <FarmerCrops />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/harvest"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <HarvestList />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/crop-details/:id"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <CropDetailsView />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/expenses"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <ExpenseTracker />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/marketplace"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <FarmerMarketplace />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/marketplace/:id"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <CropDetails />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/profile"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <FarmerProfile />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/farmer/crop-records/:cropId"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <CropRecords />
-            </RequireAuth>
-          }
-        />
-
-        {/* Buyer Protected Routes */}
-        <Route
-          path="/buyer/dashboard"
-          element={
-            <RequireAuth allowedRoles={["buyer"]} redirectTo="/buyer/login">
-              <BuyerLayout>
-                <BuyerDashboard />
-              </BuyerLayout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/buyer/marketplace"
-          element={
-            <RequireAuth allowedRoles={["buyer"]} redirectTo="/buyer/login">
-              <BuyerLayout>
-                <Marketplace />
-              </BuyerLayout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/buyer/marketplace/:id"
-          element={
-            <RequireAuth allowedRoles={["buyer"]} redirectTo="/buyer/login">
-              <BuyerLayout>
-                <CropPurchase />
-              </BuyerLayout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/buyer/orders"
-          element={
-            <RequireAuth allowedRoles={["buyer"]} redirectTo="/buyer/login">
-              <BuyerLayout>
-                <MyOrders />
-              </BuyerLayout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/buyer/profile"
-          element={
-            <RequireAuth allowedRoles={["buyer"]} redirectTo="/buyer/login">
-              <BuyerLayout>
-                <Profile />
-              </BuyerLayout>
-            </RequireAuth>
-          }
-        />
-
-        {/* Agent */}
-        <Route
-          path="/agent/dashboard"
-          element={
-            <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
-              <AgentDashboard />
-            </RequireAuth>
-          }
-        />
-
-        {/* Admin */}
-        <Route
-          element={
-            <RequireAuth allowedRoles={["admin"]} redirectTo="/admin/login" />
-          }
-        >
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="farmers" element={<FarmersList />} />
-            <Route path="buyers" element={<BuyersList />} />
-            <Route path="agents" element={<AgentsList />} />
-          </Route>
-        </Route>
-
-        {/* Not Found */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </>
+          <div className="panel table">
+            {loading ? <p>Loading orders...</p> :
+              <table>
+                <thead>
+                  <tr>
+                    <th>Order</th><th>Product</th><th>Farmer</th><th>Buyer</th><th>Qty</th><th>Total</th><th>Status</th><th>Approved</th><th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.length === 0 ? <tr><td colSpan={9}>No orders</td></tr> :
+                    orders.map(o => (
+                      <tr key={o._id}>
+                        <td>{o._id}</td>
+                        <td>{o.product?.name}</td>
+                        <td>{o.farmer?.fullName || o.farmer?.name}</td>
+                        <td>{o.buyer?.fullName || o.buyer?.email}</td>
+                        <td>{o.quantity}</td>
+                        <td>₹{o.total}</td>
+                        <td><span className="pill">{o.status}</span></td>
+                        <td>{o.approved ? <span className="tag-approved">Yes</span> : <span className="tag-pending">No</span>}</td>
+                        <td style={{display:"flex", gap:8}}>
+                          <button className="btn secondary" onClick={() => approveOrder(o._id, !o.approved)}>{o.approved ? "Unapprove" : "Approve"}</button>
+                          <select className="input" defaultValue={o.status || "Pending"} onChange={(e)=>changeStatus(o._id, e.target.value)}>
+                            <option>Pending</option>
+                            <option>Confirmed</option>
+                            <option>Shipped</option>
+                            <option>Delivered</option>
+                            <option>Cancelled</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        </motion.div>
+      </main>
+    </div>
   );
 }
-
-export default App;
-
-

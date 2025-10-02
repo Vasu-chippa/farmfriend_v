@@ -1,5 +1,59 @@
 /* apps/frontend/src/pages/Agent/Dashboard/AgentDashboard.css */
-.mini-bars { display:flex; gap:12px; align-items:flex-end; padding-top: 8px; }
-.mini-bar-item { text-align:center; width:70px; }
-.mini-bar-item .bar { width: 100%; background: linear-gradient(180deg,#60a5fa,#2563eb); border-radius:6px; transition:height .3s; }
-.mini-bar-item .label { font-size:12px; margin-top:6px; color:#374151; }
+
+/* Enhancements for KPI cards */
+.kpi:hover {
+  transform: translateY(-2px); /* Slight lift on hover */
+  box-shadow: 0 10px 25px rgba(2,6,23,0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+}
+
+.kpi .value {
+  color: #1d4ed8; /* Stronger accent color for key metrics */
+}
+
+/* Mini-Bar Chart Styling */
+.mini-bars {
+  padding-top: 12px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  height: 150px; /* Define a consistent height for the chart area */
+  border-bottom: 1px solid #eef2f6; /* Separator line */
+  margin-bottom: 12px;
+}
+
+.mini-bar-item {
+  text-align: center;
+  width: 50px; /* Make bars slightly thinner */
+  flex-shrink: 0;
+  cursor: help;
+}
+
+.mini-bar-item .bar {
+  width: 100%;
+  background: linear-gradient(0deg, #3b82f6, #1d4ed8); /* Updated gradient direction for vertical bar */
+  border-radius: 6px 6px 0 0; /* Only round top corners */
+  transition: height 0.4s ease-out; /* Smooth transition for data update */
+  min-height: 4px; /* Ensure even 0 value has a visual anchor */
+}
+
+.mini-bar-item:hover .bar {
+  opacity: 0.9;
+}
+
+.mini-bar-item .label {
+  font-size: 11px; /* Smaller label for monthly/region names */
+  margin-top: 6px;
+  color: #4b5563;
+  font-weight: 500;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.mini-bar-item .value.small {
+  margin-top: 2px;
+  font-weight: 600;
+  color: #9ca3af;
+}

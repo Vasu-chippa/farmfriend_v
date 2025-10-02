@@ -10,7 +10,7 @@ function AgentSidebar() {
       <nav>
         <ul>
           <li>
-            <NavLink to="/agent/dashboard" className={({isActive}) => isActive ? "active" : ""}>📊 Dashboard</NavLink>
+            <NavLink to="/agent/dashboard" className={({isActive}) => isActive ? "active" : ""}>📊 Agent Dashboard</NavLink>
           </li>
           <li>
             <NavLink to="/agent/farmers" className={({isActive}) => isActive ? "active" : ""}>👨‍🌾 Farmers</NavLink>

@@ -1,7 +1,7 @@
 // apps/frontend/src/pages/Agent/Profile/AgentProfile.jsx
 import React, { useEffect, useState } from "react";
 import API from "../../../api";
-import AgentSidebar from "../../../components/AgentSidebar";
+//import AgentSidebar from "../../../components/AgentSidebar";
 import "../../../pages/Agent/Agent.css";
 import "./AgentProfile.css";
 import { motion } from "framer-motion";
@@ -44,7 +44,7 @@ export default function AgentProfile() {
 
   return (
     <div className="agent-layout">
-      <AgentSidebar />
+     
       <main className="agent-main">
         <motion.div initial="hidden" animate="visible" variants={slideInLeft}>
           <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12}}>

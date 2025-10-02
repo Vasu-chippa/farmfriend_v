@@ -1,9 +1,9 @@
 // apps/frontend/src/pages/Agent/Farmers/AgentFarmers.jsx
 import React, { useEffect, useState } from "react";
 import API from "../../../api";
-import AgentSidebar from "../../../components/AgentSidebar";
+//import AgentSidebar from "../../../components/AgentSidebar";
 import "../../../pages/Agent/Agent.css";
-import "./AgentFarmers.css";
+import "./FarmersPage.css";
 import { motion } from "framer-motion";
 import { slideInLeft } from "../../Agent/animation";
 
@@ -53,7 +53,7 @@ export default function AgentFarmers() {
 
   return (
     <div className="agent-layout">
-      <AgentSidebar />
+     
       <main className="agent-main">
         <motion.div initial="hidden" animate="visible" variants={slideInLeft}>
           <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12}}>

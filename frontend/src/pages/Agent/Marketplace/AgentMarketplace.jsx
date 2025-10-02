@@ -1,7 +1,7 @@
 // apps/frontend/src/pages/Agent/Marketplace/AgentMarketplace.jsx
 import React, { useEffect, useState } from "react";
 import API from "../../../api";
-import AgentSidebar from "../../../components/AgentSidebar";
+//import AgentSidebar from "../../../components/AgentSidebar";
 import "../../../pages/Agent/Agent.css";
 import "./AgentMarketplace.css";
 import { motion } from "framer-motion";
@@ -38,7 +38,7 @@ export default function AgentMarketplace() {
 
   return (
     <div className="agent-layout">
-      <AgentSidebar />
+     
       <main className="agent-main">
         <motion.div initial="hidden" animate="visible" variants={slideInRight}>
           <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12}}>
@@ -55,11 +55,11 @@ export default function AgentMarketplace() {
                     <div style={{display:"flex", gap:12, alignItems:"center"}}>
                       <div style={{width:72,height:72,background:"#eef2ff",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center"}}>
                         {/* image placeholder */}
-                        {p.images && p.images.length ? <img src={p.images[0].startsWith("http") ? p.images[0] : `${(process.env.REACT_APP_API_URL||"")?.replace("/api","")}/uploads/${p.images[0].replace(/^\/?uploads\//,"")}`} alt="img" style={{width:68,height:68,objectFit:"cover",borderRadius:6}} /> : <div style={{fontSize:12,color:"#2563eb"}}>Image</div>}
+                        {/* {p.images && p.images.length ? <img src={p.images[0].startsWith("http") ? p.images[0] : `${(process.env.REACT_APP_API_URL||"")?.replace("/api","")}/uploads/${p.images[0].replace(/^\/?uploads\//,"")}`} alt="img" style={{width:68,height:68,objectFit:"cover",borderRadius:6}} /> : <div style={{fontSize:12,color:"#2563eb"}}>Image</div>} */}
                       </div>
                       <div style={{flex:1}}>
                         <h3 style={{margin:0}}>{p.name}</h3>
-                        <p className="small">{p.description}</p>
+                        {/* <p className="small">{p.description}</p> */}
                         <div className="small">Farmer: {p.farmer?.fullName || p.farmer?.name || "—"}</div>
                         <div style={{marginTop:8}}><strong>₹{p.price}</strong> • {p.quantity} kg</div>
                       </div>

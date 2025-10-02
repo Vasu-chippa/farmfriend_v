@@ -9,6 +9,7 @@ import RequireAuth from "./components/guards/RequireAuth";
 // Layouts
 import AdminLayout from "./layouts/AdminLayout";
 import BuyerLayout from "./layouts/BuyerLayout";
+import AgentLayout from "./layouts/AgentLayout";
 
 // Home
 import Home from "./pages/Home/Home";
@@ -42,6 +43,10 @@ import Profile from "./pages/Buyer/Profile/Profile";
 
 // Agent Section
 import AgentDashboard from "./pages/Agent/Dashboard/AgentDashboard";
+import AgentFarmers from "./pages/Agent/Farmers/FarmersPage";
+import AgentOrders from "./pages/Agent/Orders/AgentOrders";
+import AgentProfile from "./pages/Agent/Profile/AgentProfile";
+import AgentMarketplace from  "./pages/Agent/Marketplace/AgentMarketplace"
 
 // Admin Section
 import AdminDashboard from "./pages/Admin/Dashboard/AdminDashboard";
@@ -191,17 +196,60 @@ function App() {
           }
         />
 
-        {/* Agent */}
-        <Route
-          path="/agent/dashboard"
-          element={
-            <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
-              <AgentDashboard />
-            </RequireAuth>
-          }
-        />
+        {/* Agent Protected Routes */}
+<Route
+  path="/agent/dashboard"
+  element={
+    <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
+      <AgentLayout>
+        <AgentDashboard />
+      </AgentLayout>
+    </RequireAuth>
+  }
+/>
+<Route
+  path="/agent/farmers"
+  element={
+    <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
+      <AgentLayout>
+        <AgentFarmers />
+      </AgentLayout>
+    </RequireAuth>
+  }
+/>
+<Route
+  path="/agent/marketplace"
+  element={
+    <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
+      <AgentLayout>
+        <AgentMarketplace />
+      </AgentLayout>
+    </RequireAuth>
+  }
+/>
+<Route
+  path="/agent/orders"
+  element={
+    <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
+      <AgentLayout>
+        <AgentOrders />
+      </AgentLayout>
+    </RequireAuth>
+  }
+/>
+<Route
+  path="/agent/profile"
+  element={
+    <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
+      <AgentLayout>
+        <AgentProfile />
+      </AgentLayout>
+    </RequireAuth>
+  }
+/>
 
-        {/* Admin */}
+
+        {/* Admin Protected Routes */}
         <Route
           element={
             <RequireAuth allowedRoles={["admin"]} redirectTo="/admin/login" />

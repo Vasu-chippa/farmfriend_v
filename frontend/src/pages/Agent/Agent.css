@@ -8,9 +8,9 @@
 
 /* main content area (leave 300px space) */
 .agent-main {
-  margin-left: 300px; /* leave space for sidebar */
+  margin-left: 100px; /* leave space for sidebar */
   padding: 28px;
-  width: calc(100% - 300px);
+  width: calc(70% - 20px);
   box-sizing: border-box;
 }
 
@@ -20,6 +20,7 @@
   padding: 18px;
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(2,6,23,0.06);
+  
 }
 
 /* small utility */
