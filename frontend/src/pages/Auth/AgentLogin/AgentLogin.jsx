@@ -1,34 +1,60 @@
+// apps/frontend/src/pages/Auth/AgentLogin/AgentLogin.jsx
 import React, { useState } from "react";
-// import axios from "axios";
-import API from "../../../api"; // ✅ api instance
-import "../Auth.css";  // ✅ common css
+import API from "../../../api"; 
+import { useNavigate } from "react-router-dom";
+import "../../Auth/Auth.css"; 
 
 function AgentLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const { data } = await API.post("/agents/login", { email, password });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // call backend route (API uses baseURL from .env)
+      const res = await API.post("/agents/login", { email, password });
 
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
+      // Expect backend response: { message, user, token } or { token, user }
+      const { token, user } = res.data;
 
-    alert("Login successful");
-    window.location.href = "/agent/dashboard";
-  } catch (err) {
-    alert(err.response?.data?.message || "Login failed");
-  }
-};
+      if (!token || !user) {
+        console.error("Agent login response missing token/user:", res.data);
+        return alert("Login failed: invalid response from server");
+      }
 
+      // Save to localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      console.log("Agent login response:", res.data);
+
+      // navigate to agent dashboard
+      navigate("/agent/dashboard");
+    } catch (err) {
+      console.error("Agent Login Error:", err.response?.data || err.message);
+      alert("Login failed: " + (err.response?.data?.message || err.message));
+    }
+  };
 
   return (
     <div className="auth-container">
       <h2>Agent Login</h2>
       <form onSubmit={handleSubmit}>
-        <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-        <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
         <button type="submit">Login</button>
       </form>
     </div>

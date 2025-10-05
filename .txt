@@ -1,3 +1,68 @@
+// apps/frontend/src/pages/Auth/AgentLogin/AgentLogin.jsx
+import React, { useState } from "react";
+import API from "../../../api"; 
+import { useNavigate } from "react-router-dom";
+import "../../Auth/Auth.css"; 
+
+function AgentLogin() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // call backend route (API uses baseURL from .env)
+      const res = await API.post("/agents/login", { email, password });
+
+      // Expect backend response: { message, user, token } or { token, user }
+      const { token, user } = res.data;
+
+      if (!token || !user) {
+        console.error("Agent login response missing token/user:", res.data);
+        return alert("Login failed: invalid response from server");
+      }
+
+      // Save to localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      console.log("Agent login response:", res.data);
+
+      // navigate to agent dashboard
+      navigate("/agent/dashboard");
+    } catch (err) {
+      console.error("Agent Login Error:", err.response?.data || err.message);
+      alert("Login failed: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  return (
+    <div className="auth-container">
+      <h2>Agent Login</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  );
+}
+
+export default AgentLogin;
+__________________
 import Agent from "../models/Agent.js";
 import User from "../models/User.js";
 import Order from "../models/Order.js";
@@ -75,22 +140,6 @@ export const getOrdersForAgent = async (req, res) => {
   }
 };
 
-export const updateOrderStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    const order = await Order.findById(id);
-    if (!order) return res.status(404).json({ message: "Order not found" });
-
-    order.status = status;
-    await order.save();
-
-    res.json({ message: "Order status updated", order });
-  } catch (error) {
-    res.status(500).json({ message: "Error updating order", error: error.message });
-  }
-};
 
 // =================== PROFILE ===================
 export const getAgentProfile = async (req, res) => {
@@ -121,783 +170,192 @@ export const updateAgentProfile = async (req, res) => {
     res.status(500).json({ message: "Error updating profile", error: error.message });
   }
 };
-_______________________________________
-// backend/src/controllers/farmerController.js
-import Farmer from "../models/User.js";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 
-// ✅ New imports for stats
-import Crop from "../models/Crop.js";
-import Harvest from "../models/Harvest.js";
-import Expense from "../models/Expense.js";
+// Helper
+const signToken = (payload) => jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-// Generate JWT
-const generateToken = (id, role) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
-};
-
-// Register a farmer
-export const registerFarmer = async (req, res) => {
-  try {
-    const { fullName, email, password } = req.body;
-
-    // Check if farmer already exists
-    const existing = await Farmer.findOne({ email });
-    if (existing) {
-      return res.status(400).json({ message: "Farmer already exists" });
-    }
-
-    const farmer = new Farmer({ fullName, email, password, role: "farmer" });
-    await farmer.save();
-
-    res
-      .status(201)
-      .json({ message: "Farmer registered successfully", farmer });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-// Login Farmer
-export const loginFarmer = async (req, res) => {
+export const loginAgent = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const agent = await Agent.findOne({ email });
 
-    const farmer = await Farmer.findOne({ email });
-    if (!farmer) {
-      return res.status(404).json({ message: "Farmer not found" });
-    }
+    if (!agent) return res.status(400).json({ message: "Invalid credentials" });
 
-    const isMatch = await bcrypt.compare(password, farmer.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
+    const match = await bcrypt.compare(password, agent.password);
+    if (!match) return res.status(400).json({ message: "Invalid credentials" });
 
-    res.json({
-      message: "Login successful",
-      token: generateToken(farmer._id, farmer.role),
-      farmer,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
+    // include _id and role
+    const token = signToken({ _id: agent._id, role: "agent", email: agent.email });
 
-// Get all farmers
-export const getFarmers = async (req, res) => {
-  try {
-    const farmers = await Farmer.find({ role: "farmer" });
-    res.json(farmers);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
+    // do not include password
+    const userSafe = {
+      _id: agent._id,
+      fullName: agent.fullName || agent.name || "",
+      email: agent.email,
+      phone: agent.phone,
+      region: agent.region,
+      role: "agent",
+    };
 
-// 📊 Farmer Stats API
-export const getFarmerStats = async (req, res) => {
-  try {
-    const farmerId = req.user._id;
-
-    // Total Crops created by farmer
-    const totalCrops = await Crop.countDocuments({ farmer: farmerId });
-
-    // Harvest crops count
-    const harvest = await Harvest.findOne({ farmer: farmerId });
-    const totalHarvest = harvest ? harvest.crops.length : 0;
-
-    // Farmer’s expenses (⚠️ requires farmer field in Expense model)
-    const expenses = await Expense.find({ farmer: farmerId });
-    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-
-    // Total Income from harvest
-    const totalIncome = harvest
-      ? harvest.crops.reduce(
-          (sum, c) => sum + (c.price || 0) * (c.quantity || 0),
-          0
-        )
-      : 0;
-
-    // Profit or Loss
-    const profitOrLoss = totalIncome - totalExpenses;
-
-    res.json({
-      totalCrops,
-      totalHarvest,
-      totalExpenses,
-      totalIncome,
-      profitOrLoss,
-    });
+    return res.json({ message: "Login successful", token, user: userSafe });
   } catch (err) {
-    res.status(500).json({
-      error: "Failed to fetch stats",
-      details: err.message,
-    });
+    console.error("loginAgent:", err);
+    res.status(500).json({ message: "Error logging in" });
   }
 };
-_______________________________________
-// apps/backend/controllers/orderController.js
-import Order from "../models/Order.js";
-
-// Create new order
-export const createOrder = async (req, res) => {
+// Approve / reject an order (toggle approved boolean)
+export const approveOrder = async (req, res) => {
   try {
-    const order = new Order(req.body);
-    await order.save();
-    res.status(201).json(order);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
+    const { id } = req.params;
+    const { approve } = req.body; // boolean
 
-// Get all orders
-export const getOrders = async (req, res) => {
-  try {
-    const orders = await Order.find();
-    res.json(orders);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Get single order
-export const getOrderById = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(id).populate("farmer");
     if (!order) return res.status(404).json({ message: "Order not found" });
-    res.json(order);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    // optional: ensure agent manages this farmer. If farmers have `agent` field:
+    if (order.farmer && order.farmer.agent && order.farmer.agent.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to approve this order" });
+    }
+
+    order.approved = !!approve;
+    await order.save();
+
+    res.json({ message: approve ? "Order approved" : "Order unapproved", order });
+  } catch (err) {
+    console.error("approveOrder:", err);
+    res.status(500).json({ message: "Error approving order" });
   }
 };
 
-// Update order status
+// Update order status (the frontend calls /orders/:id/status with { status })
 export const updateOrderStatus = async (req, res) => {
   try {
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status: req.body.status },
-      { new: true }
-    );
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(id).populate("farmer");
     if (!order) return res.status(404).json({ message: "Order not found" });
-    res.json(order);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-_______________________________________
-import Harvest from "../models/Harvest.js";
 
-// 📋 Get all harvest crops for logged-in farmer
-export const getHarvest = async (req, res) => {
-  try {
-    const harvest = await Harvest.findOne({ farmer: req.user._id }).populate(
-      "crops.cropId",
-      "name image price quantity isOrganic quality category"
-    );
-
-    if (!harvest) return res.json({ crops: [] });
-
-    res.json({ crops: harvest.crops });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// ➕ Add a crop to harvest
-export const addCrop = async (req, res) => {
-  try {
-    const { cropId, name, price, quantity, image, category, quality } = req.body;
-
-    let harvest = await Harvest.findOne({ farmer: req.user._id });
-    if (!harvest) {
-      harvest = new Harvest({ farmer: req.user._id, crops: [] });
+    if (order.farmer && order.farmer.agent && order.farmer.agent.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to update this order" });
     }
 
-    // avoid duplicates
-    if (harvest.crops.some((c) => c.cropId.toString() === cropId)) {
-      return res.status(400).json({ msg: "Crop already in harvest list" });
-    }
+    order.status = status;
+    await order.save();
 
-    harvest.crops.push({ cropId, name, price, quantity, image, category, quality });
-    await harvest.save();
-
-    await harvest.populate("crops.cropId", "name image price quantity isOrganic quality category");
-
-    res.json({ msg: "Crop added", crops: harvest.crops });
+    res.json({ message: "Order status updated", order });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("updateOrderStatus:", err);
+    res.status(500).json({ message: "Error updating order status" });
   }
-};
-
-// ❌ Remove a crop from harvest
-export const removeCrop = async (req, res) => {
-  try {
-    const { cropId } = req.params;
-    let harvest = await Harvest.findOne({ farmer: req.user._id });
-    if (!harvest) return res.status(404).json({ msg: "No harvest list found" });
-
-    harvest.crops = harvest.crops.filter((c) => c.cropId.toString() !== cropId);
-    await harvest.save();
-
-    await harvest.populate("crops.cropId", "name image price quantity isOrganic quality category");
-
-    res.json({ msg: "Crop removed", crops: harvest.crops });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// 📌 Get single harvest crop by id
-export const getSingleHarvest = async (req, res) => {
-  try {
-    const harvest = await Harvest.findOne({ farmer: req.user._id }).populate(
-      "crops.cropId",
-      "name image price quantity isOrganic quality category"
-    );
-
-    if (!harvest) return res.status(404).json({ message: "Harvest not found" });
-
-    const crop = harvest.crops.find((c) => c.cropId._id.toString() === req.params.id);
-
-    if (!crop) return res.status(404).json({ message: "No crop found" });
-
-    res.json(crop);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-_______________________________________
-import Harvest from "../models/Harvest.js";
-
-// Get all crops uploaded by farmers (for marketplace)
-export const getMarketplaceCrops = async (req, res) => {
-  try {
-    const crops = await Harvest.find()
-      .populate("farmer", "name email") // shows farmer info
-      .sort({ createdAt: -1 });
-    res.json(crops);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to load marketplace crops", error });
-  }
-};
-___________________________
+};_______________________________________
+// apps/backend/src/routes/agentRoutes.js
 import express from "express";
-import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 import {
-  getAgentDashboard,
+  registerAgent,
+  loginAgent,
+  getAgentProfile,
+  updateAgentProfile,
   getAgentFarmers,
   addFarmerByAgent,
+  verifyFarmer,
   listProductsForAgent,
+  approveProduct,
   getOrdersForAgent,
+  approveOrder,
   updateOrderStatus,
-  getAgentProfile,
-  updateAgentProfile
+  getAgentDashboard,
 } from "../controllers/agentController.js";
-import { loginAgent } from "../controllers/agentAuthController.js";
-
+import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
+
+// Auth
+router.post("/register", registerAgent); // or admin-only depending on your design
 router.post("/login", loginAgent);
+
+// Dashboard
 router.get("/dashboard", protect, authorizeRoles("agent"), getAgentDashboard);
 
+// Farmers
 router.get("/farmers", protect, authorizeRoles("agent"), getAgentFarmers);
 router.post("/farmers", protect, authorizeRoles("agent"), addFarmerByAgent);
+router.put("/farmers/verify", protect, authorizeRoles("agent"), verifyFarmer);
 
+// Products
 router.get("/products", protect, authorizeRoles("agent"), listProductsForAgent);
+router.put("/products/:productId/approve", protect, authorizeRoles("agent"), approveProduct);
 
+// Orders (both endpoints)
 router.get("/orders", protect, authorizeRoles("agent"), getOrdersForAgent);
-router.put("/orders/:id", protect, authorizeRoles("agent"), updateOrderStatus);
+router.put("/orders/:id/approve", protect, authorizeRoles("agent"), approveOrder); // approve/unapprove
+router.put("/orders/:id/status", protect, authorizeRoles("agent"), updateOrderStatus); // update status
 
+// Profile
 router.get("/profile", protect, authorizeRoles("agent"), getAgentProfile);
 router.put("/profile", protect, authorizeRoles("agent"), updateAgentProfile);
 
 export default router;
-___________________________
-// backend/src/routes/farmerRoutes.js
-import express from "express";
-import upload from "../middlewares/upload.js";
-import Product from "../models/Product.js";
-import Expense from "../models/Expense.js";
-import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
+_______________________________________file:///C:/Users/PC/Documents/web%20projects/ff/ffv1/ff/backend/src/routes/agentRoutes.js:14
+  approveOrder,
+  ^^^^^^^^^^^^
+SyntaxError: The requested module '../controllers/agentController.js' does not provide an export named 'approveOrder'
+    at ModuleJob._instantiate (node:internal/modules/esm/module_job:228:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:337:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:651:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
 
-const router = express.Router();
+Node.js v22.19.0
+[nodemon] app crashed - waiting for file changes before starting...
+[nodemon] restarting due to changes...
+[nodemon] starting `node server.js`
+file:///C:/Users/PC/Documents/web%20projects/ff/ffv1/ff/backend/src/controllers/agentController.js:182
+export const updateOrderStatus = async (req, res) => {
+             ^
 
-/* =====================================================
-   FARMER PRODUCTS CRUD
-===================================================== */
+SyntaxError: Identifier 'updateOrderStatus' has already been declared
+    at compileSourceTextModule (node:internal/modules/esm/utils:346:16)
+    at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18)
+    at #translate (node:internal/modules/esm/loader:540:12)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:587:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ModuleJob._link (node:internal/modules/esm/module_job:162:19)
 
-/**
- * @route   POST /api/farmers/products
- * @desc    Add new product (farmer only)
- */
-router.post("/products", protect, authorizeRoles("farmer"), upload.array("images"), async (req, res) => {
-  try {
-    const { name, description, price, quantity, quality, organic } = req.body;
-    // Save all uploaded images
-    const images = req.files?.length > 0 ? req.files.map(f => "/uploads/" + f.filename) : [];
+Node.js v22.19.0
+[nodemon] app crashed - waiting for file changes before starting...
+[nodemon] restarting due to changes...
+[nodemon] starting `node server.js`
+file:///C:/Users/PC/Documents/web%20projects/ff/ffv1/ff/backend/src/routes/agentRoutes.js:12
+  approveProduct,
+  ^^^^^^^^^^^^^^
+SyntaxError: The requested module '../controllers/agentController.js' does not provide an export named 'approveProduct'
+    at ModuleJob._instantiate (node:internal/modules/esm/module_job:228:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:337:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:651:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
 
-    const product = new Product({
-      farmer: req.user._id,
-      name,
-      description,
-      price,
-      quantity,
-      quality,
-      isOrganic: organic === "true" || organic === true,
-      images,
-    });
+Node.js v22.19.0
+[nodemon] app crashed - waiting for file changes before starting...
+[nodemon] restarting due to changes...
+[nodemon] starting `node server.js`
+file:///C:/Users/PC/Documents/web%20projects/ff/ffv1/ff/backend/src/routes/agentRoutes.js:4
+  registerAgent,
+  ^^^^^^^^^^^^^
+SyntaxError: The requested module '../controllers/agentController.js' does not provide an export named 'registerAgent'
+    at ModuleJob._instantiate (node:internal/modules/esm/module_job:228:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:337:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:651:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
 
-    await product.save();
-    res.status(201).json(product);
-  } catch (err) {
-    console.error("❌ Error saving product:", err);
-    res.status(500).json({ error: "Error saving product" });
-  }
-});
-
-/**
- * @route   GET /api/farmers/products
- * @desc    Fetch all products of logged-in farmer
- */
-router.get("/products", protect, authorizeRoles("farmer"), async (req, res) => {
-  try {
-    const products = await Product.find({ farmer: req.user._id }).sort({ createdAt: -1 });
-    res.json(products);
-  } catch (err) {
-    console.error("❌ Error fetching products:", err);
-    res.status(500).json({ error: "Failed to fetch products" });
-  }
-});
-
-/**
- * @route   GET /api/farmers/products/:id
- * @desc    Fetch single product details (farmer only)
- */
-router.get("/products/:id", protect, authorizeRoles("farmer"), async (req, res) => {
-  try {
-    const product = await Product.findOne({ _id: req.params.id, farmer: req.user._id });
-    if (!product) return res.status(404).json({ error: "Product not found" });
-    res.json(product);
-  } catch (err) {
-    console.error("❌ Error fetching product:", err);
-    res.status(500).json({ error: "Failed to fetch product" });
-  }
-});
-
-/**
- * @route   PUT /api/farmers/products/:id
- * @desc    Update product (farmer only)
- */
-router.put("/products/:id", protect, authorizeRoles("farmer"), upload.array("images"), async (req, res) => {
-  try {
-    const { name, description, price, quantity, quality, organic } = req.body;
-    const updateData = { name, description, price, quantity, quality, isOrganic: organic === "true" || organic === true };
-    if (req.files && req.files.length > 0) {
-      updateData.images = req.files.map(f => "/uploads/" + f.filename);
-    }
-    const updated = await Product.findOneAndUpdate(
-      { _id: req.params.id, farmer: req.user._id },
-      updateData,
-      { new: true }
-    );
-    if (!updated) return res.status(404).json({ error: "Product not found" });
-    res.json(updated);
-  } catch (err) {
-    console.error("❌ Error updating product:", err);
-    res.status(500).json({ error: "Failed to update product" });
-  }
-});
-
-/**
- * @route   DELETE /api/farmers/products/:id
- * @desc    Delete product (farmer only)
- */
-router.delete("/products/:id", protect, authorizeRoles("farmer"), async (req, res) => {
-  try {
-    const deleted = await Product.findOneAndDelete({ _id: req.params.id, farmer: req.user._id });
-    if (!deleted) return res.status(404).json({ error: "Product not found" });
-    res.json({ message: "🗑️ Product deleted successfully" });
-  } catch (err) {
-    console.error("❌ Error deleting product:", err);
-    res.status(500).json({ error: "Failed to delete product" });
-  }
-});
-
-/* =====================================================
-   FARMER EXPENSES CRUD
-===================================================== */
-
-/**
- * @route   POST /api/farmers/expenses
- * @desc    Add a new expense (farmer only)
- */
-// backend/src/routes/farmerRoutes.js
-router.post("/expenses", protect, authorizeRoles("farmer"), async (req, res) => {
-  try {
-    const { cropName, category, amount, date, description } = req.body;
-
-    const expense = new Expense({
-      farmer: req.user._id,   // 👈 save logged-in farmer
-      cropName,
-      category,
-      amount,
-      date,
-      description,
-    });
-
-    await expense.save();
-    res.status(201).json(expense);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to add expense" });
-  }
-});
+Node.js v22.19.0
+[nodemon] app crashed - waiting for file changes before starting...
 
 
-/**
- * @route   GET /api/farmers/expenses
- * @desc    Fetch all expenses of logged-in farmer
- */
-router.get("/expenses", protect, authorizeRoles("farmer"), async (req, res) => {
-  try {
-    const expenses = await Expense.find({ farmer: req.user._id }).sort({ date: -1 }); // 👈 only this farmer
-    res.json(expenses);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch expenses" });
-  }
-});
-
-/**
- * @route   PUT /api/farmers/expenses/:id
- */
-router.put("/expenses/:id", protect, authorizeRoles("farmer"), async (req, res) => {
-  try {
-    const updated = await Expense.findOneAndUpdate(
-      { _id: req.params.id, farmer: req.user._id }, // 👈 only update own expenses
-      req.body,
-      { new: true }
-    );
-    if (!updated) return res.status(404).json({ error: "Expense not found" });
-    res.json(updated);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to update expense" });
-  }
-});
+check these isuues , and fix it and give full updated code 
 
 
-/**
- * @route   DELETE /api/farmers/expenses/:id
- */
-router.delete("/expenses/:id", protect, authorizeRoles("farmer"), async (req, res) => {
-  try {
-    const deleted = await Expense.findOneAndDelete({ _id: req.params.id, farmer: req.user._id }); // 👈 only own
-    if (!deleted) return res.status(404).json({ error: "Expense not found" });
-    res.json({ message: "Expense deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to delete expense" });
-  }
-});
 
 
-export default router;
-_______________________________________
-import express from "express";
-import Order from "../models/Order.js";
-
-const router = express.Router();
-
-// ✅ Place order
-router.post("/", async (req, res) => {
-  try {
-    const { buyer, farmer, crop, quantity, price } = req.body;
-    const order = new Order({ buyer, farmer, crop, quantity, price });
-    await order.save();
-    res.status(201).json({ message: "✅ Order placed successfully", order });
-  } catch (error) {
-    console.error("❌ Error placing order:", error);
-    res.status(500).json({ error: "Failed to place order" });
-  }
-});
-
-// ✅ Get orders for a buyer
-router.get("/buyer/:buyerId", async (req, res) => {
-  try {
-    const orders = await Order.find({ buyer: req.params.buyerId })
-      .populate("crop", "name price images")
-      .populate("farmer", "fullName email");
-    res.json(orders);
-  } catch (error) {
-    console.error("❌ Error fetching buyer orders:", error);
-    res.status(500).json({ error: "Failed to fetch orders" });
-  }
-});
-
-export default router;
-_______________________________________
-// backend/routes/productRoutes.js
-import express from "express";
-import { getProducts, getProductById } from "../controllers/productController.js";
-
-const router = express.Router();
-
-// Public route for buyers (fetch all products)
-router.get("/", getProducts);
-
-// Public route for single product
-router.get("/:id", getProductById);
-
-export default router;
-_______________________________________
-// backend/src/routes/marketplaceRoutes.js
-import express from "express";
-import Product from "../models/Product.js";
-
-const router = express.Router();
-
-/**
- * @route   GET /api/marketplace
- * @desc    Get all products (for buyers)
- */
-router.get("/", async (req, res) => {
-  try {
-    // Only show products with quantity > 0 (available)
-    const products = await Product.find({ quantity: { $gt: 0 } })
-      .populate("farmer", "name email")
-      .sort({ createdAt: -1 });
-    res.json(products);
-  } catch (error) {
-    console.error("Error fetching marketplace products:", error);
-    res.status(500).json({ error: "❌ Failed to fetch marketplace products" });
-  }
-});
-
-/**
- * @route   GET /api/marketplace/:id
- * @desc    Get product details (for buyers)
- */
-router.get("/:id", async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id).populate("farmer", "name email");
-    if (!product) return res.status(404).json({ error: "❌ Product not found" });
-    res.json(product);
-  } catch (error) {
-    console.error("Error fetching product:", error);
-    res.status(500).json({ error: "❌ Failed to fetch product" });
-  }
-});
-
-export default router;
-__________________________________
-// apps/frontend/src/pages/Agent/Farmers/AgentFarmers.jsx
-import React, { useEffect, useState } from "react";
-import API from "../../../api";
-//import AgentSidebar from "../../../components/AgentSidebar";
-import "../../../pages/Agent/Agent.css";
-import "./FarmersPage.css";
-import { motion } from "framer-motion";
-import { slideInLeft } from "../../Agent/animation";
-
-export default function AgentFarmers() {
-  const [farmers, setFarmers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ fullName:"", email:"", phone:"", password:"" });
-
-  const fetchFarmers = async () => {
-    setLoading(true);
-    try {
-      const { data } = await API.get("/agents/farmers");
-      setFarmers(data || []);
-    } catch (err) {
-      console.error("fetch farmers error", err);
-      alert("Failed to fetch farmers");
-    } finally { setLoading(false); }
-  };
-
-  useEffect(()=> { fetchFarmers() }, []);
-
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    try {
-      await API.post("/agents/farmers", form);
-      setForm({ fullName:"", email:"", phone:"", password:"" });
-      setShowAdd(false);
-      fetchFarmers();
-      alert("Farmer created");
-    } catch (err) {
-      console.error("create farmer", err);
-      alert(err.response?.data?.message || "Failed to create");
-    }
-  };
-
-  const toggleVerify = async (farmerId, verify) => {
-    if (!window.confirm(`${verify ? "Verify" : "Unverify"} farmer?`)) return;
-    try {
-      await API.put("/agents/farmers/verify", { farmerId, verify });
-      fetchFarmers();
-    } catch (err) {
-      console.error("verify farmer", err);
-      alert("Failed to update farmer");
-    }
-  };
-
-  return (
-    <div className="agent-layout">
-     
-      <main className="agent-main">
-        <motion.div initial="hidden" animate="visible" variants={slideInLeft}>
-          <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12}}>
-            <h2>Farmers</h2>
-            <div>
-              <button className="btn" onClick={() => setShowAdd(s=>!s)}>{showAdd ? "Close" : "Add Farmer"}</button>
-            </div>
-          </div>
-
-          {showAdd && (
-            <form className="panel" onSubmit={handleCreate} style={{marginBottom:12}}>
-              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:10}}>
-                <input className="input" placeholder="Full name" value={form.fullName} onChange={(e)=>setForm({...form, fullName:e.target.value})} required />
-                <input className="input" placeholder="Email" value={form.email} onChange={(e)=>setForm({...form, email:e.target.value})} required />
-                <input className="input" placeholder="Phone" value={form.phone} onChange={(e)=>setForm({...form, phone:e.target.value})} />
-                <input className="input" placeholder="Password (temp)" value={form.password} onChange={(e)=>setForm({...form, password:e.target.value})} />
-              </div>
-              <div style={{marginTop:10}}>
-                <button className="btn" type="submit">Create</button>
-              </div>
-            </form>
-          )}
-
-          <div className="panel table">
-            {loading ? <p>Loading farmers...</p> :
-              <table>
-                <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Verified</th><th>Action</th></tr></thead>
-                <tbody>
-                  {farmers.length === 0 ? <tr><td colSpan={5}>No farmers assigned.</td></tr> :
-                    farmers.map(f => (
-                      <tr key={f._id}>
-                        <td>{f.fullName || f.name}</td>
-                        <td>{f.email}</td>
-                        <td>{f.phone || "-"}</td>
-                        <td>{f.verified ? <span className="tag-approved">Verified</span> : <span className="tag-pending">Pending</span>}</td>
-                        <td>
-                          <button className="btn secondary" onClick={()=>toggleVerify(f._id, !f.verified)}>
-                            {f.verified ? "Unverify" : "Verify"}
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  }
-                </tbody>
-              </table>
-            }
-          </div>
-        </motion.div>
-      </main>
-    </div>
-  );
-}
-______________
-// apps/frontend/src/pages/Agent/Orders/AgentOrders.jsx
-import React, { useEffect, useState } from "react";
-import API from "../../../api";
-//import AgentSidebar from "../../../components/AgentSidebar";
-import "../../../pages/Agent/Agent.css";
-import "./AgentOrders.css";
-import { motion } from "framer-motion";
-import { fadeInUp } from "../../Agent/animation";
-
-export default function AgentOrders() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const { data } = await API.get("/agents/orders");
-      setOrders(data || []);
-    } catch (err) {
-      console.error("fetch orders", err);
-      alert("Failed to fetch orders");
-    } finally { setLoading(false); }
-  };
-
-  useEffect(()=> { fetchOrders() }, []);
-
-  const approveOrder = async (id, approve) => {
-    if (!window.confirm(`${approve ? "Approve" : "Reject"} order?`)) return;
-    try {
-      await API.put(`/agents/orders/${id}/approve`, { approve });
-      fetchOrders();
-      alert("Order updated");
-    } catch (err) {
-      console.error("approve order", err);
-      alert("Failed to update");
-    }
-  };
-
-  const changeStatus = async (id, status) => {
-    if (!window.confirm(`Set status to ${status}?`)) return;
-    try {
-      await API.put(`/agents/orders/${id}/status`, { status });
-      fetchOrders();
-      alert("Order status updated");
-    } catch (err) {
-      console.error("update status", err);
-      alert("Failed to update status");
-    }
-  };
-
-  return (
-    <div className="agent-layout">
-      
-      <main className="agent-main">
-        <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
-          <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12}}>
-            <h2>Orders</h2>
-            <div><button className="btn" onClick={fetchOrders}>Refresh</button></div>
-          </div>
-
-          <div className="panel table">
-            {loading ? <p>Loading orders...</p> :
-              <table>
-                <thead>
-                  <tr>
-                    <th>Order</th><th>Product</th><th>Farmer</th><th>Buyer</th><th>Qty</th><th>Total</th><th>Status</th><th>Approved</th><th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.length === 0 ? <tr><td colSpan={9}>No orders</td></tr> :
-                    orders.map(o => (
-                      <tr key={o._id}>
-                        <td>{o._id}</td>
-                        <td>{o.product?.name}</td>
-                        <td>{o.farmer?.fullName || o.farmer?.name}</td>
-                        <td>{o.buyer?.fullName || o.buyer?.email}</td>
-                        <td>{o.quantity}</td>
-                        <td>₹{o.total}</td>
-                        <td><span className="pill">{o.status}</span></td>
-                        <td>{o.approved ? <span className="tag-approved">Yes</span> : <span className="tag-pending">No</span>}</td>
-                        <td style={{display:"flex", gap:8}}>
-                          <button className="btn secondary" onClick={() => approveOrder(o._id, !o.approved)}>{o.approved ? "Unapprove" : "Approve"}</button>
-                          <select className="input" defaultValue={o.status || "Pending"} onChange={(e)=>changeStatus(o._id, e.target.value)}>
-                            <option>Pending</option>
-                            <option>Confirmed</option>
-                            <option>Shipped</option>
-                            <option>Delivered</option>
-                            <option>Cancelled</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))
-                  }
-                </tbody>
-              </table>
-            }
-          </div>
-        </motion.div>
-      </main>
-    </div>
-  );
-}
