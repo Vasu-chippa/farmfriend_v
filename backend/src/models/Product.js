@@ -11,6 +11,7 @@ const productSchema = new mongoose.Schema(
     quality: { type: String },
     isOrganic: { type: Boolean, default: false },
     images: [{ type: String }],
+    approved: { type: Boolean, default: false }, 
   },
   { timestamps: true }
 );
