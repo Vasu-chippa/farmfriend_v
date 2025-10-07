@@ -1,0 +1,143 @@
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif; /* Use a modern, readable font */
+    background-color: #f7f9fc; /* Very light background for dashboard */
+}
+
+/* 2. Main Layout Container */
+.agent-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* 3. Main Content Area */
+.agent-main {
+    flex-grow: 1;
+    padding: 30px; /* Generous padding */
+    max-width: calc(100% - 250px); /* Assumes sidebar is approx 250px wide */
+    margin-left: 0; /* Remove if sidebar is managed by parent component */
+}
+
+/* 4. Header Section */
+.agent-main .flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.agent-main h2 {
+    font-size: 1.75rem; /* Large, clear title */
+    font-weight: 700;
+    color: #1f2937;
+}
+
+/* Refresh Button Styling */
+.bg-blue-600 {
+    background-color: #56e825;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    border-radius: 30%;
+    height: 35px;
+    font-weight: bold;
+    color: black;
+}
+
+.bg-blue-600:hover {
+    background-color: #2563eb;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+
+/* 5. Table Container (The primary visual element) */
+.bg-white.shadow.rounded-2xl {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Soft, pronounced shadow */
+    overflow: hidden; /* Contains the border-radius for the table */
+}
+
+.min-w-full {
+    min-width: 1000px; /* Ensure table doesn't get too compressed */
+}
+
+/* 6. Table Head (Header Row) */
+.bg-gray-100 {
+    background-color: #f9fafb; /* Slightly darker header for contrast */
+    color: #4b5563;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+}
+
+.agent-main th {
+    padding: 12px 20px;
+    border-bottom: 2px solid #e5e7eb;
+    text-align: left;
+}
+
+/* 7. Table Body (Data Rows) */
+.agent-main td {
+    padding: 14px 20px;
+    font-size: 0.875rem;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6; /* Very light separator */
+}
+
+.hover\:bg-gray-50:hover {
+    background-color: #f9fafb; /* Subtle hover effect on rows */
+}
+
+/* Buyer Details */
+.font-medium.text-gray-900 {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 2px;
+}
+
+.text-gray-500.text-xs {
+    color: #6b7280;
+    font-size: 0.75rem;
+}
+
+/* Transaction ID (Mono font for technical IDs) */
+.font-mono.text-blue-600 {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.8125rem;
+    color: #1d4ed8;
+}
+
+/* 8. Status Tags (Badges) */
+.px-3.py-1.rounded-full {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 9999px; /* Fully rounded pill shape */
+    font-weight: 600;
+    font-size: 0.75rem;
+    line-height: 1;
+    min-width: 70px;
+    text-align: center;
+}
+
+/* Override Tailwind background colors with more distinct shades */
+.bg-green-100 { background-color: #d1fae5; }
+.text-green-800 { color: #065f46; }
+
+.bg-red-100 { background-color: #fee2e2; }
+.text-red-800 { color: #991b1b; }
+
+.bg-orange-100 { background-color: #ffedd5; }
+.text-orange-800 { color: #9a3412; }
+
+/* 9. Loading/Empty State */
+.p-4.text-gray-500 {
+    padding: 40px;
+    text-align: center;
+    font-style: italic;
+    color: #6b7280;
+    font-size: 1rem;
+}

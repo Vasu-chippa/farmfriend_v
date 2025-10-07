@@ -216,13 +216,12 @@ export const getOrdersForAgent = async (req, res) => {
   }
 };
 
-
 export const approveOrder = async (req, res) => {
   try {
     const { id } = req.params;
     const { approve } = req.body;
 
-    const order = await Order.findById(id).populate("farmer");
+    const order = await Order.findById(id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
     order.approved = !!approve;
@@ -231,7 +230,7 @@ export const approveOrder = async (req, res) => {
     res.json({ message: approve ? "Order approved" : "Order unapproved", order });
   } catch (err) {
     console.error("approveOrder:", err);
-    res.status(500).json({ message: "Error approving order" });
+    res.status(500).json({ message: "Error approving order", error: err.message });
   }
 };
 
@@ -240,7 +239,7 @@ export const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const order = await Order.findById(id).populate("farmer");
+    const order = await Order.findById(id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
     order.status = status;
@@ -249,9 +248,10 @@ export const updateOrderStatus = async (req, res) => {
     res.json({ message: "Order status updated", order });
   } catch (err) {
     console.error("updateOrderStatus:", err);
-    res.status(500).json({ message: "Error updating order status" });
+    res.status(500).json({ message: "Error updating order status", error: err.message });
   }
 };
+
 
 // =================== PROFILE ===================
 export const getAgentProfile = async (req, res) => {
