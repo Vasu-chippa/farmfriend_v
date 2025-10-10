@@ -1,0 +1,105 @@
+.manage-products {
+  display: flex;
+  background: #f4f6f8;
+  min-height: 100vh;
+}
+
+/* Content beside sidebar */
+.content {
+  margin-left: 220px;
+  padding: 20px;
+  width: 100%;
+  background: #f4f6f8;
+}
+
+/* Heading */
+.content h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 25px;
+}
+
+/* Add Product Form */
+.add-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 25px;
+}
+
+.add-form input {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  flex: 1;
+  min-width: 150px;
+  font-size: 15px;
+  outline: none;
+}
+
+.add-form input:focus {
+  border-color: #14532d;
+}
+
+.add-form button {
+  background: #14532d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.add-form button:hover {
+  background: #166534;
+}
+
+/* Table */
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.products-table th,
+.products-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.products-table th {
+  background-color: #14532d;
+  color: #fff;
+  font-weight: 600;
+}
+
+.products-table tr:hover {
+  background-color: #f3f4f6;
+}
+
+/* Delete button */
+.products-table button {
+  background: #dc2626;
+  border: none;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.products-table button:hover {
+  background: #b91c1c;
+}

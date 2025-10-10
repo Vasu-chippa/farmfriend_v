@@ -1,38 +1,29 @@
-// backend/src/controllers/adminController.js
 import User from "../models/User.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
-import Crop from "../models/Crop.js";
 
-// 🧮 Dashboard Summary
+// 📊 Dashboard Summary
 export const getDashboardData = async (req, res) => {
   try {
-    const [users, farmers, agents, orders, products] = await Promise.all([
-      User.countDocuments(),
-      User.countDocuments({ role: "farmer" }),
-      User.countDocuments({ role: "agent" }),
-      Order.countDocuments(),
-      Product.countDocuments(),
-    ]);
-
-    const payments = await Order.aggregate([
-      { $match: { "payment.status": { $exists: true } } },
-      {
-        $group: {
-          _id: "$payment.status",
-          totalAmount: { $sum: "$payment.amount" },
-          count: { $sum: 1 },
-        },
-      },
-    ]);
+    const [users, farmers, buyers, agents, orders, products, totalPayments] =
+      await Promise.all([
+        User.countDocuments(),
+        User.countDocuments({ role: "farmer" }),
+        User.countDocuments({ role: "buyer" }),
+        User.countDocuments({ role: "agent" }),
+        Order.countDocuments(),
+        Product.countDocuments(),
+        Order.countDocuments({ "payment.status": "Paid" }),
+      ]);
 
     res.json({
       users,
       farmers,
+      buyers,
       agents,
       orders,
       products,
-      payments,
+      payments: totalPayments,
     });
   } catch (err) {
     res.status(500).json({ message: "Error loading dashboard", error: err.message });
@@ -48,34 +39,39 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Error fetching users", error: err.message });
   }
 };
+export const getAllFarmers = async (req, res) => {
+  try {
+    const farmers = await User.find({ role: "farmer" }).select("-password");
+    res.json(farmers);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch farmers", error: err.message });
+  }
+};
 
-// 👨‍🌾 Get All Farmers (already have CRUD below)
+// 👨‍🌾 Farmers CRUD
 export const getFarmers = async (req, res) => {
   try {
     const farmers = await User.find({ role: "farmer" }).select("-password");
     res.json(farmers);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching farmers", error: err.message });
   }
 };
 
-// ➕ Add Farmer
 export const addFarmer = async (req, res) => {
   try {
-    const { fullName, email, phone, password } = req.body;
+    const { fullName, email, password } = req.body;
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: "Farmer already exists" });
 
-    const farmer = new User({ fullName, email, phone, password, role: "farmer" });
+    const farmer = new User({ fullName, email, password, role: "farmer" });
     await farmer.save();
-
     res.status(201).json({ message: "Farmer added successfully", farmer });
   } catch (err) {
     res.status(500).json({ message: "Error adding farmer", error: err.message });
   }
 };
 
-// ✏️ Update Farmer
 export const updateFarmer = async (req, res) => {
   try {
     const farmer = await User.findOneAndUpdate(
@@ -90,7 +86,6 @@ export const updateFarmer = async (req, res) => {
   }
 };
 
-// ❌ Delete Farmer
 export const deleteFarmer = async (req, res) => {
   try {
     const farmer = await User.findOneAndDelete({ _id: req.params.id, role: "farmer" });
@@ -101,7 +96,7 @@ export const deleteFarmer = async (req, res) => {
   }
 };
 
-// 🧑‍💼 Get All Agents
+// 🧑‍💼 Agents
 export const getAllAgents = async (req, res) => {
   try {
     const agents = await User.find({ role: "agent" }).select("-password");
@@ -111,7 +106,41 @@ export const getAllAgents = async (req, res) => {
   }
 };
 
-// 📦 Get All Orders
+// 👤 Buyers
+export const getAllBuyers = async (req, res) => {
+  try {
+    const buyers = await User.find({ role: "buyer" }).select("-password");
+    res.json(buyers);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching buyers", error: err.message });
+  }
+};
+
+export const addBuyer = async (req, res) => {
+  try {
+    const { fullName, email, password } = req.body;
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ message: "Buyer already exists" });
+
+    const buyer = new User({ fullName, email, password, role: "buyer" });
+    await buyer.save();
+    res.status(201).json({ message: "Buyer added successfully", buyer });
+  } catch (err) {
+    res.status(500).json({ message: "Error adding buyer", error: err.message });
+  }
+};
+
+export const deleteBuyer = async (req, res) => {
+  try {
+    const buyer = await User.findOneAndDelete({ _id: req.params.id, role: "buyer" });
+    if (!buyer) return res.status(404).json({ message: "Buyer not found" });
+    res.json({ message: "Buyer deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting buyer", error: err.message });
+  }
+};
+
+// 📦 Orders
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -123,7 +152,6 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
-// 🔄 Update Order Status
 export const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -140,15 +168,21 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
-// 💳 Get All Payments
+// 💳 Payments
 export const getAllPayments = async (req, res) => {
   try {
     const orders = await Order.find({ "payment.status": { $exists: true } })
-      .populate("buyer", "fullName email");
+      .populate("buyer", "fullName email")
+      .populate({
+        path: "product",
+        populate: { path: "farmer", select: "fullName email" },
+      });
 
     const payments = orders.map((o) => ({
       orderId: o._id,
       buyer: o.buyer,
+      farmer: o.product?.farmer,
+      productName: o.product?.name,
       transactionId: o.payment?.transactionId,
       paymentDate: o.payment?.paymentDate,
       paymentAmount: o.payment?.amount,
@@ -163,7 +197,7 @@ export const getAllPayments = async (req, res) => {
   }
 };
 
-// 🌾 Get All Products
+// 🌾 Products
 export const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find().populate("farmer", "fullName email");
@@ -173,7 +207,6 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
-// ✅ Approve or Reject Product
 export const approveProduct = async (req, res) => {
   try {
     const { approved } = req.body;

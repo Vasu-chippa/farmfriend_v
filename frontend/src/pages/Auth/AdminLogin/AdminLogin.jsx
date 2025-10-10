@@ -1,7 +1,6 @@
-// apps/frontend/src/pages/Auth/AdminLogin/AdminLogin.jsx
+// frontend/src/pages/Auth/AdminLogin/AdminLogin.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import API from "../../../api";
 import { setAuth } from "../../../utils/auth";
 import "../../Auth/Auth.css";
@@ -13,27 +12,27 @@ const AdminLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const { data } = await API.post("/auth/login", {
-        email,
-        password,
-      });
+      const { data } = await API.post("/auth/login", { email, password });
 
       if (data.user.role !== "admin") {
         alert("Access denied: Only Admins allowed ❌");
         return;
       }
 
-      // Save token + user to localStorage
-      setAuth(data.token, data.user);
+      // Save token + user
+      await setAuth(data.token, data.user);
 
       alert("✅ Admin login successful");
-      navigate("/admin/dashboard"); // redirect to admin dashboard
+
+      // Ensure navigation happens after saving
+      setTimeout(() => {
+        navigate("/admin/dashboard", { replace: true });
+      }, 200);
 
     } catch (error) {
       console.error(error);
-      alert("❌ Login failed");
+      alert("❌ Login failed: " + (error.response?.data?.message || "Server error"));
     }
   };
 

@@ -1,22 +1,20 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { getCurrentUser } from "../../services/authService";
+import { getUser } from "../../utils/auth"; // ✅ Use consistent helper
 
 const RequireAuth = ({ allowedRoles, redirectTo = "/login", children }) => {
   const location = useLocation();
-  const user = getCurrentUser(); // ✅ always read from localStorage
+  const user = getUser(); // ✅ Now reads from ff_user
 
   if (!user) {
-    // No user → force login
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // Logged in but wrong role → block
+    // wrong role
     return <Navigate to="/" replace />;
   }
 
-  // ✅ Allowed → render children
   return children;
 };
 

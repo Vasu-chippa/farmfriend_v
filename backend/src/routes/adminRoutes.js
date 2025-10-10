@@ -1,13 +1,16 @@
-// backend/src/routes/adminRoutes.js
 import express from "express";
 import {
+  getDashboardData,
+  getAllUsers,
   getFarmers,
+  getAllFarmers,
   addFarmer,
   updateFarmer,
   deleteFarmer,
-  getDashboardData,
-  getAllUsers,
   getAllAgents,
+  getAllBuyers,
+  addBuyer,
+  deleteBuyer,
   getAllOrders,
   updateOrderStatus,
   getAllPayments,
@@ -19,29 +22,33 @@ import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// 🔹 Dashboard summary
+// Dashboard
 router.get("/dashboard", protect, authorizeRoles("admin"), getDashboardData);
 
-// 🔹 All Users
+// Users
 router.get("/users", protect, authorizeRoles("admin"), getAllUsers);
 
-// 🔹 Manage farmers
+// Farmers
 router.get("/farmers", protect, authorizeRoles("admin"), getFarmers);
 router.post("/farmers", protect, authorizeRoles("admin"), addFarmer);
 router.put("/farmers/:id", protect, authorizeRoles("admin"), updateFarmer);
 router.delete("/farmers/:id", protect, authorizeRoles("admin"), deleteFarmer);
-
-// 🔹 View agents
+// Agents
 router.get("/agents", protect, authorizeRoles("admin"), getAllAgents);
 
-// 🔹 Orders management
+// Buyers
+router.get("/buyers", protect, authorizeRoles("admin"), getAllBuyers);
+router.post("/buyers", protect, authorizeRoles("admin"), addBuyer);
+router.delete("/buyers/:id", protect, authorizeRoles("admin"), deleteBuyer);
+
+// Orders
 router.get("/orders", protect, authorizeRoles("admin"), getAllOrders);
 router.put("/orders/:id/status", protect, authorizeRoles("admin"), updateOrderStatus);
 
-// 🔹 Payments (from orders)
+// Payments
 router.get("/payments", protect, authorizeRoles("admin"), getAllPayments);
 
-// 🔹 Products (crops/marketplace)
+// Products
 router.get("/products", protect, authorizeRoles("admin"), getAllProducts);
 router.put("/products/:id/approve", protect, authorizeRoles("admin"), approveProduct);
 

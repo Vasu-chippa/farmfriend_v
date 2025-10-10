@@ -2,7 +2,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
-
+import { useLocation } from "react-router-dom";
 // Guards
 import RequireAuth from "./components/guards/RequireAuth";
 
@@ -52,13 +52,21 @@ import AgentPayments from "./pages/Agent/Orders/AgentPayments";
 
 // Admin Section
 import AdminDashboard from "./pages/Admin/Dashboard/AdminDashboard";
-import FarmersList from "./pages/Admin/FarmersList";
-import BuyersList from "./pages/Admin/BuyersList";
-import AgentsList from "./pages/Admin/AgentsList";
+import ManageFarmers from "./pages/Admin/Users/ManageFarmers";
+import ManageBuyers from "./pages/Admin/Users/ManageBuyers";
+import ManageAgents from "./pages/Admin/Users/ManageAgents";
+import ManageOrders from "./pages/Admin/Orders/ManageOrders";
+import ManageProducts from "./pages/Admin/Products/ManageProducts";
+import ManagePayments from "./pages/Admin/Payments/ManagePayments";
+
 
 function App() {
+  const location = useLocation();
+  const hideNavbar = location.pathname.startsWith("/admin");
+
   return (
     <>
+     {!hideNavbar}
       <Navbar />
       <Routes>
         {/* Home */}
@@ -260,20 +268,24 @@ function App() {
     </RequireAuth>
   }
 />
+{/* ✅ Admin Protected Routes */}
+<Route
+  path="/admin/*"
+  element={
+    <RequireAuth allowedRoles={["admin"]} redirectTo="/admin/login">
+      <AdminLayout />
+    </RequireAuth>
+  }
+>
+  <Route path="dashboard" element={<AdminDashboard />} />
+  <Route path="users/farmers" element={<ManageFarmers />} />
+  <Route path="users/buyers" element={<ManageBuyers />} />
+  <Route path="users/agents" element={<ManageAgents />} />
+  <Route path="orders" element={<ManageOrders />} />
+  <Route path="products" element={<ManageProducts />} />
+  <Route path="payments" element={<ManagePayments />} />
+</Route>
 
-        {/* Admin Protected Routes */}
-        <Route
-          element={
-            <RequireAuth allowedRoles={["admin"]} redirectTo="/admin/login" />
-          }
-        >
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="farmers" element={<FarmersList />} />
-            <Route path="buyers" element={<BuyersList />} />
-            <Route path="agents" element={<AgentsList />} />
-          </Route>
-        </Route>
 
         {/* Not Found */}
         <Route path="*" element={<NotFound />} />

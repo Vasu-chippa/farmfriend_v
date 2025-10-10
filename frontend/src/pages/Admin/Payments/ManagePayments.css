@@ -1,0 +1,79 @@
+.manage-payments {
+  display: flex;
+  background: #f4f6f8;
+  min-height: 100vh;
+}
+
+/* Main content beside sidebar */
+.content {
+  margin-left: 220px;
+  padding: 20px;
+  width: 100%;
+  background: #f4f6f8;
+}
+
+.content h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 25px;
+}
+
+/* Table styling */
+.payments-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.payments-table th,
+.payments-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.payments-table th {
+  background-color: #14532d;
+  color: #fff;
+  font-weight: 600;
+}
+
+.payments-table tr:hover {
+  background-color: #f3f4f6;
+}
+
+/* Colored payment status */
+.payments-table td[style*="color: green"] {
+  font-weight: 600;
+}
+
+.payments-table td[style*="color: red"] {
+  font-weight: 600;
+}
+
+.payments-table td[style*="color: orange"] {
+  font-weight: 600;
+}
+
+/* Responsive behavior */
+@media (max-width: 900px) {
+  .content {
+    margin-left: 0;
+    padding: 15px;
+  }
+
+  .payments-table,
+  .products-table {
+    font-size: 14px;
+  }
+
+  .payments-table th,
+  .payments-table td {
+    padding: 8px;
+  }
+}
