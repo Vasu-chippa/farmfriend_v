@@ -12,16 +12,20 @@ function BuyerLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/buyers/login", {
+      const res = await axios.post("https://farmfriend.onrender.com/api/buyers/login", {
         email,
         password,
       });
+
       // ✅ Assuming backend returns { token, user }
       const { token, user } = res.data;
+
       // Save in localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
+
       alert("Login successful ✅");
+
       // ✅ Redirect buyer to Buyer Dashboard
       navigate("/buyer/dashboard");
     } catch (err) {
