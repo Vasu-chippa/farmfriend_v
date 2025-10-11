@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import API from "../../../api";
 import "../Auth.css";  // ✅ common css
 
 function BuyerRegister() {
@@ -10,7 +10,7 @@ function BuyerRegister() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/buyers/register", { fullName, email, password });
+      await API.post("/buyers/register", { fullName, email, password });
       alert("Buyer registered successfully");
     } catch (err) {
       alert("Registration failed");
