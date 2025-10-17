@@ -35,8 +35,8 @@ const FarmerDashboard = () => {
         totalCrops,
         totalHarvest,
         totalExpenses,
-        expectedRevenue: totalIncome,
-        profit: profitOrLoss,
+        totalIncome,
+        profitOrLoss,
       });
 
       setNotifications([
@@ -56,21 +56,7 @@ const FarmerDashboard = () => {
   };
 
   useEffect(() => {
-<<<<<<< HEAD
-=======
-    const fetchStats = async () => {
-      try {
-        const res = await API.get("/farmers/stats");
-        setStats(res.data);
-        setNotifications([
-          { id: 1, text: `${res.data.totalHarvest} crops harvested.` },
-          { id: 2, text: `Total income: ₹${res.data.totalIncome}` },
-        ]);
-      } catch (err) {
-        console.error("Error fetching stats", err);
-      }
-    };
->>>>>>> 4480506761132cab8ea8e9e83e5a14ad937448ed
+
     fetchStats();
     const interval = setInterval(fetchStats, POLL_INTERVAL);
     return () => clearInterval(interval);
@@ -78,7 +64,7 @@ const FarmerDashboard = () => {
 
   const chartData = [
     { name: "Expenses", value: stats.totalExpenses },
-    { name: "Revenue", value: stats.expectedRevenue },
+    { name: "Revenue", value: stats.totalIncome },
   ];
 
   const farmerName = localStorage.getItem("farmerName") || "Farmer";
@@ -120,13 +106,9 @@ const FarmerDashboard = () => {
         </div>
         <div className="card">
           <h3>Profit / Loss</h3>
-<<<<<<< HEAD
-          <p style={getProfitStyle(stats.profit)}>
-            {stats.profit >= 0 ? `+ ₹${stats.profit}` : `- ₹${Math.abs(stats.profit)}`}
+          <p style={getProfitStyle(stats.profitOrLoss)}>
+            {Number(stats.profitOrLoss) >= 0 ? `+ ₹${stats.profitOrLoss}` : `- ₹${Math.abs(stats.profitOrLoss)}`}
           </p>
-=======
-          <p>{stats.profitOrLoss >= 0 ? `+ ₹${stats.profitOrLoss}` : `- ₹${Math.abs(stats.profitOrLoss)}`}</p>
->>>>>>> 4480506761132cab8ea8e9e83e5a14ad937448ed
         </div>
       </div>
 

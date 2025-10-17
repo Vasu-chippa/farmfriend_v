@@ -55,19 +55,37 @@ app.use("/api/marketplace", productRoutes);
 // Database connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
+    const mongoUri = process.env.MONGO_URI;
+    if (!mongoUri) {
+      console.warn(
+        "⚠️  MONGO_URI is not set. Skipping MongoDB connection. Set MONGO_URI in your .env to enable DB features."
+      );
+      return;
+    }
+
+    await mongoose.connect(mongoUri, {
+      // mongoose options (no deprecated options required for modern mongoose)
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
     console.log("✅ MongoDB connected successfully");
   } catch (error) {
-    console.error("❌ MongoDB connection failed:", error.message);
-    // ❌ Don't exit directly on Render; let it retry
+    console.error("❌ MongoDB connection failed:", error && error.message ? error.message : error);
+    // Don't crash here; depending on environment (like preview or static deployments)
+    // you may intentionally run without a DB. If you expect a DB, set MONGO_URI.
   }
 };
 
 connectDB();
 
 // Server listening
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+const PORT = Number(process.env.PORT) || 5000;
+const server = app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+server.on("error", (err) => {
+  if (err && err.code === "EADDRINUSE") {
+    console.error(`❌ Port ${PORT} is already in use. Set a different PORT in your environment or stop the process using this port.`);
+  } else {
+    console.error("❌ Server error:", err);
+  }
+});
