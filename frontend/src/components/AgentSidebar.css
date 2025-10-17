@@ -1,0 +1,190 @@
+/* apps/frontend/src/components/AgentSidebar.css - Professional Dark Theme */
+.agent-sidebar {
+    /* --- DARK THEME VARIABLES --- */
+    --sidebar-width: 250px; 
+    --sidebar-mini-width: 70px;
+    --primary-color: #4CAF50;       /* Farm Friend Green for branding */
+    --accent-color: #2196F3;        /* Bright Blue for interactivity (like the sample) */
+    --bg-color-dark: #202020;       /* Dark Background for sidebar */
+    --text-color-light: #ffffff;    /* Light text for main links */
+    --text-color-muted: #aaaaaa;    /* Muted text for footer/subtle details */
+    --hover-bg: #303030;            /* Slightly lighter dark on hover */
+    --active-bg: #1e88e5;           /* Solid Blue for active link (from sample) */
+    --transition-speed: 0.3s;
+    
+    width: var(--sidebar-width);
+    background-color: var(--bg-color-dark);
+    /* Remove box-shadow as the dark color creates its own depth */
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.4); 
+    padding: 0 0 20px 0; /* Adjusted padding to remove top padding for better flow */
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transition: width var(--transition-speed) ease-in-out;
+}
+
+
+/*
+** Brand Section - Top Bar
+*/
+
+.agent-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    /* Use a contrasting color for the brand */
+    color: var(--primary-color); 
+    padding: 20px; /* Add top padding back here */
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--hover-bg); /* Use a subtle dark line */
+    /* Add a subtle animation on load/mount */
+    animation: fadeInDown 0.5s ease-out;
+}
+
+/*
+** Navigation Styling
+*/
+
+.agent-sidebar nav {
+    flex-grow: 1; 
+}
+
+.agent-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* NavLink Styling */
+.agent-sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 15px; 
+    padding: 14px 20px; /* Increased vertical padding for a bolder look */
+    color: var(--text-color-light);
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    border-left: 5px solid transparent; /* Used for hover/active state */
+    transition: all var(--transition-speed) cubic-bezier(0.25, 0.8, 0.25, 1);
+    white-space: nowrap;
+}
+
+
+/*
+** Hover and Focus Effects (Animations/Transitions)
+*/
+
+.agent-sidebar nav a:hover {
+    background-color: var(--hover-bg);
+    color: var(--accent-color); /* Blue text on hover */
+    border-left-color: var(--accent-color); /* Blue line on hover */
+    /* Subtle 3D-like hover effect */
+    transform: perspective(1px) translateZ(0);
+    box-shadow: inset 0 0 0 4px rgba(33, 150, 243, 0.1); /* Subtle inner glow/box */
+}
+
+
+/*
+** Active Link Styling (Matching Sample Image)
+*/
+
+.agent-sidebar nav a.active {
+    background-color: var(--accent-color); /* Solid blue background */
+    color: var(--text-color-light); /* White text */
+    font-weight: 600;
+    border-left-color: var(--primary-color); /* Keep a hint of Farm Friend green */
+    position: relative;
+    /* Animation: Subtle scale/pop to emphasize active state */
+    transform: scale(1.02);
+    box-shadow: 0 0 10px rgba(33, 150, 243, 0.5); /* Glowing effect */
+}
+
+/* Active Indicator Dot Animation - A pulsing effect on the blue background */
+.agent-sidebar nav a.active::after {
+    content: '';
+    position: absolute;
+    right: 15px;
+    width: 6px;
+    height: 6px;
+    background-color: var(--text-color-light);
+    border-radius: 50%;
+    /* Key animation: Pulse effect */
+    animation: pulse-light 1.5s infinite; 
+}
+
+
+.sidebar-footer {
+    --footer-bg: #1c1c1c; /* Slightly darker than the sidebar background */
+    --footer-text: #dddddd;
+    --footer-hover-text: #ffffff;
+    
+    padding: 15px 20px;
+    padding-bottom: 90px;
+    border-top: 1px solid #333; /* Darker separator line */
+    background-color: var(--footer-bg);
+    color: var(--footer-text);
+    font-size: 1rem; /* Increased size (was 0.85rem) */
+    cursor: pointer; /* Suggests it's clickable (e.g., for logout/profile) */
+    
+    /* Smooth transitions for a professional feel */
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+/* Hover Effect for the Footer */
+.sidebar-footer:hover {
+    background-color: #2a2a2a; /* Lighten background on hover */
+    color: var(--footer-hover-text); /* Brighten text on hover */
+    /* Subtle 3D lift/shadow effect on hover */
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px); /* Makes it look like it's lifting */
+}
+
+.sidebar-footer small {
+    display: block; /* Ensures the whole line takes up space */
+    font-size: 1rem; /* Match the parent font size */
+}
+
+.sidebar-footer strong {
+    color: #4CAF50; /* Farm Friend Green for the name */
+    font-weight: 700;
+    /* Optional: Small text shadow for emphasis */
+    text-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+    transition: color 0.3s ease;
+}
+
+/* Adjustments for the Collapsed Sidebar State (if you use it) */
+.agent-layout.collapsed .sidebar-footer {
+    opacity: 0;
+    height: 0;
+    padding: 0;
+    border-top: none;
+    overflow: hidden;
+}
+/*
+** Keyframe Animations
+*/
+
+/* Subtle brand title animation */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Pulse animation for the active state dot */
+@keyframes pulse-light {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); 
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+}

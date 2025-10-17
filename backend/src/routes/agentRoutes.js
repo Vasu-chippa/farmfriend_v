@@ -1,14 +1,52 @@
-// backend/src/routes/agentRoutes.js
+// apps/backend/src/routes/agentRoutes.js
 import express from "express";
-import { registerAgent, getAgents } from "../controllers/agentController.js";
+import {
+  registerAgent,
+  loginAgent,
+  getAgentProfile,
+  updateAgentProfile,
+  getAgentFarmers,
+  addFarmerByAgent,
+  verifyFarmer,
+  listProductsForAgent,
+  approveProduct,
+  getOrdersForAgent,
+  approveOrder,
+  updateOrderStatus,
+  getAgentDashboard,
+  getAgentPayments,
+} from "../controllers/agentController.js";
 import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// Only Admin can create agents
-router.post("/register", protect, authorizeRoles("admin"), registerAgent);
+// Auth
+router.post("/register", registerAgent);
+router.post("/login", loginAgent);
 
-// Admin and Agent can view agents
-router.get("/", protect, authorizeRoles("admin", "agent"), getAgents);
+// Dashboard
+router.get("/dashboard", protect, authorizeRoles("agent"), getAgentDashboard);
+
+// Farmers
+router.get("/farmers", protect, authorizeRoles("agent"), getAgentFarmers);
+router.post("/farmers", protect, authorizeRoles("agent"), addFarmerByAgent);
+router.put("/farmers/verify", protect, authorizeRoles("agent"), verifyFarmer);
+
+// Products
+router.get("/products", protect, authorizeRoles("agent"), listProductsForAgent);
+router.put("/products/:productId/approve", protect, authorizeRoles("agent"), approveProduct);
+
+// Orders
+router.get("/orders", protect, authorizeRoles("agent"), getOrdersForAgent);
+router.put("/orders/:id/approve", protect, authorizeRoles("agent"), approveOrder);
+router.put("/orders/:id/status", protect, authorizeRoles("agent"), updateOrderStatus);
+
+// Payments
+router.get("/payments", protect, authorizeRoles("agent"), getAgentPayments);
+
+
+// Profile
+router.get("/profile", protect, authorizeRoles("agent"), getAgentProfile);
+router.put("/profile", protect, authorizeRoles("agent"), updateAgentProfile);
 
 export default router;

@@ -9,7 +9,7 @@ import RequireAuth from "./components/guards/RequireAuth";
 // Layouts
 import AdminLayout from "./layouts/AdminLayout";
 import BuyerLayout from "./layouts/BuyerLayout";
-
+import AgentLayout from "./layouts/AgentLayout";
 // Home
 import Home from "./pages/Home/Home";
 import NotFound from "./pages/NotFound/NotFound";
@@ -41,13 +41,24 @@ import MyOrders from "./pages/Buyer/Orders/MyOrders";
 import Profile from "./pages/Buyer/Profile/Profile";
 
 // Agent Section
+// Agent Section
 import AgentDashboard from "./pages/Agent/Dashboard/AgentDashboard";
+import AgentFarmers from "./pages/Agent/Farmers/FarmersPage";
+import AgentOrders from "./pages/Agent/Orders/AgentOrders";
+import AgentProfile from "./pages/Agent/Profile/AgentProfile";
+import AgentMarketplace from  "./pages/Agent/Marketplace/AgentMarketplace"
+import AgentPayments from "./pages/Agent/Orders/AgentPayments";
+
 
 // Admin Section
 import AdminDashboard from "./pages/Admin/Dashboard/AdminDashboard";
-import FarmersList from "./pages/Admin/FarmersList";
-import BuyersList from "./pages/Admin/BuyersList";
-import AgentsList from "./pages/Admin/AgentsList";
+import ManageFarmers from "./pages/Admin/Users/ManageFarmers";
+import ManageBuyers from "./pages/Admin/Users/ManageBuyers";
+import ManageAgents from "./pages/Admin/Users/ManageAgents";
+import ManageOrders from "./pages/Admin/Orders/ManageOrders";
+import ManageProducts from "./pages/Admin/Products/ManageProducts";
+import ManagePayments from "./pages/Admin/Payments/ManagePayments";
+
 
 function App() {
   return (
@@ -191,29 +202,85 @@ function App() {
           }
         />
 
-        {/* Agent */}
-        <Route
-          path="/agent/dashboard"
-          element={
-            <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
-              <AgentDashboard />
-            </RequireAuth>
-          }
-        />
+              {/* Agent Protected Routes */}
+<Route
+  path="/agent/dashboard"
+  element={
+    <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
+      <AgentLayout>
+        <AgentDashboard />
+      </AgentLayout>
+    </RequireAuth>
+  }
+/>
+<Route
+  path="/agent/farmers"
+  element={
+    <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
+      <AgentLayout>
+        <AgentFarmers />
+      </AgentLayout>
+    </RequireAuth>
+  }
+/>
+<Route
+  path="/agent/marketplace"
+  element={
+    <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
+      <AgentLayout>
+        <AgentMarketplace />
+      </AgentLayout>
+    </RequireAuth>
+  }
+/>
+<Route
+  path="/agent/orders"
+  element={
+    <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
+      <AgentLayout>
+        <AgentOrders />
+      </AgentLayout>
+    </RequireAuth>
+  }
+/>
+<Route
+  path="/agent/profile"
+  element={
+    <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
+      <AgentLayout>
+        <AgentProfile />
+      </AgentLayout>
+    </RequireAuth>
+  }
+/>
 
-        {/* Admin */}
-        <Route
-          element={
-            <RequireAuth allowedRoles={["admin"]} redirectTo="/admin/login" />
-          }
-        >
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="farmers" element={<FarmersList />} />
-            <Route path="buyers" element={<BuyersList />} />
-            <Route path="agents" element={<AgentsList />} />
-          </Route>
-        </Route>
+<Route
+  path="/agent/payments"
+  element={
+    <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
+      <AgentLayout>
+        <AgentPayments />
+      </AgentLayout>
+    </RequireAuth>
+  }
+/>
+       {/* ✅ Admin Protected Routes */}
+<Route
+  path="/admin/*"
+  element={
+    <RequireAuth allowedRoles={["admin"]} redirectTo="/admin/login">
+      <AdminLayout />
+    </RequireAuth>
+  }
+>
+  <Route path="dashboard" element={<AdminDashboard />} />
+  <Route path="users/farmers" element={<ManageFarmers />} />
+  <Route path="users/buyers" element={<ManageBuyers />} />
+  <Route path="users/agents" element={<ManageAgents />} />
+  <Route path="orders" element={<ManageOrders />} />
+  <Route path="products" element={<ManageProducts />} />
+  <Route path="payments" element={<ManagePayments />} />
+</Route>
 
         {/* Not Found */}
         <Route path="*" element={<NotFound />} />

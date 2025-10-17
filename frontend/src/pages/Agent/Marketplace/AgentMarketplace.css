@@ -1,0 +1,30 @@
+/* apps/frontend/src/pages/Agent/Marketplace/AgentMarketplace.css */
+/* small tweaks */
+.panel img { 
+  max-width:100%; 
+  border-radius:6px; 
+}
+
+/* Style for the individual product panel */
+.product-card {
+  transition: box-shadow 0.3s, transform 0.3s;
+  cursor: default;
+}
+
+.product-card:hover {
+  box-shadow: 0 12px 28px rgba(2,6,23,0.1);
+  transform: translateY(-2px);
+}
+
+.product-card h3 {
+  color: #1f2937;
+  font-size: 1.15em;
+}
+
+.product-image-placeholder {
+  transition: opacity 0.3s;
+}
+
+.product-card:hover .product-image-placeholder {
+  opacity: 0.9;
+}

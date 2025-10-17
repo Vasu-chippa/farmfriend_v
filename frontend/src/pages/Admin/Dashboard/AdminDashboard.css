@@ -1,0 +1,25 @@
+.admin-dashboard {
+  display: flex;
+}
+
+.dashboard-content {
+  margin-left: 130px;
+  padding: 20px;
+  width: 80%;
+  background: #f4f6f8;
+  min-height: 90vh;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}

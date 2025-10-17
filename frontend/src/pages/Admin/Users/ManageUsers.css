@@ -1,0 +1,125 @@
+.manage-users, 
+.manage-buyers {
+  display: flex;
+  background: #f9fafb;
+  min-height: 100vh;
+  font-family: "Poppins", sans-serif;
+}
+
+.content {
+  flex: 1;
+  margin-left: 220px;
+  padding: 30px;
+  transition: all 0.3s ease;
+}
+
+.content h2 {
+  font-size: 26px;
+  margin-bottom: 25px;
+  color: #333;
+  text-shadow: 1px 1px 0 #fff;
+}
+
+/* ===== Add Form ===== */
+.add-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+  background: #fff;
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.add-form input {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: border-color 0.3s;
+}
+
+.add-form input:focus {
+  border-color: #00bcd4;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 188, 212, 0.3);
+}
+
+.add-form button {
+  background: linear-gradient(135deg, #00bcd4, #0097a7);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-form button:hover {
+  background: linear-gradient(135deg, #0097a7, #00acc1);
+  transform: scale(1.05);
+}
+
+/* ===== Table Styles ===== */
+.users-table,
+.buyers-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  animation: fadeIn 0.4s ease;
+}
+
+.users-table th,
+.buyers-table th {
+  background: #00bcd4;
+  color: white;
+  font-weight: 500;
+  padding: 12px;
+  text-align: center;
+}
+
+.users-table td,
+.buyers-table td {
+  border-bottom: 1px solid #eee;
+  padding: 10px;
+  text-align: center;
+  color: #555;
+  transition: all 0.3s ease;
+}
+
+.users-table tr:hover,
+.buyers-table tr:hover {
+  background-color: #f5faff;
+  transform: scale(1.01);
+}
+
+.users-table td button,
+.buyers-table td button {
+  background: #ff5252;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.users-table td button:hover,
+.buyers-table td button:hover {
+  background: #e53935;
+  transform: scale(1.1);
+}
+
+/* ===== Animation ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

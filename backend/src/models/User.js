@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema(
       enum: ["farmer", "buyer", "agent", "admin"],
       default: "farmer",
     },
+    verified: { type: Boolean, default: false }, // ✅ Added
   },
   { timestamps: true }
 );

@@ -1,0 +1,37 @@
+/* apps/frontend/src/pages/Agent/Farmers/FarmersPage.css */
+
+/* Enhance the form layout */
+.agent-main form.panel {
+  max-width: 800px;
+}
+
+/* Style for the button inside the table cell (Action) */
+.panel.table table td button.secondary {
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.panel.table table td button.secondary:hover {
+  background: #dbeafe; /* Slightly darker hover for secondary button */
+}
+
+/* Tag styles (Verified/Pending) */
+.tag-approved, .tag-pending {
+  transition: background 0.15s ease;
+}
+
+.tag-approved:hover {
+  background: #a7f3d0; /* Lighter background on hover */
+}
+
+.tag-pending:hover {
+  background: #fde68a; /* Lighter background on hover */
+}
+
+/* Table Row Hover */
+.panel.table table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.panel.table table tbody tr:hover {
+  background-color: #f7f9fb; /* Subtle row highlighting on hover */
+}
