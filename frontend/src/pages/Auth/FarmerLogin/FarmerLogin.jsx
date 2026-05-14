@@ -18,6 +18,8 @@ function FarmerLogin() {
     try {
       const res = await API.post("/auth/login", { email, password });
       const { user } = res.data;
+      // populate client cache for compatibility helpers
+      try { await import("../../../utils/auth").then(mod => mod.setAuth(user)); } catch (e) {}
       toast.success(`Welcome back, ${user.fullName}!`);
       setTimeout(() => {
         if (user.role === "farmer") navigate("/farmer/dashboard");
