@@ -33,8 +33,7 @@ const FarmerCropDetails = () => {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
-  const [growthPct, setGrowthPct] = useState(12);
-  const [statusLabel, setStatusLabel] = useState('Good');
+  // growthPct and statusLabel were unused; remove to satisfy linter
 
   useEffect(() => {
     if (location.state?.crop) {
@@ -87,22 +86,7 @@ const FarmerCropDetails = () => {
     }));
   };
 
-  // Count-up component using Framer Motion values
-  const Count = ({ value = 0, format = (v) => v }) => {
-    const mv = useMotionValue(0);
-    const spring = useSpring(mv, { stiffness: 120, damping: 20 });
-    const [display, setDisplay] = useState(0);
-
-    useEffect(() => {
-      mv.set(value);
-    }, [value]);
-
-    useMotionValueEvent(spring, 'change', (v) => {
-      setDisplay(Math.round(v));
-    });
-
-    return <span>{format(display)}</span>;
-  };
+  // Removed Count component (unused) to satisfy linter
 
   const addToHarvestLocal = (item) => {
     const raw = localStorage.getItem('harvestList');

@@ -102,7 +102,7 @@ const CropCardModern = ({ crop }) => {
       window.removeEventListener('harvestUpdated', handler);
       window.removeEventListener('storage', storageHandler);
     };
-  }, [crop]);
+  }, [crop, checkAdded]);
 
   return (
     <motion.article className="ccm-card" variants={cardVariants} initial="hidden" animate="visible" whileHover="hover" onClick={handleCardClick} role="button" tabIndex={0} onKeyDown={(e)=> { if (e.key==='Enter') handleCardClick(); }}>

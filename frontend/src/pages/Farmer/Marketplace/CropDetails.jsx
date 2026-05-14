@@ -4,7 +4,7 @@ import API from "../../../api";
 import { motion } from "framer-motion";
 import { FaRupeeSign, FaBoxOpen, FaStar, FaLeaf } from "react-icons/fa";
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
-import { toast } from 'react-toastify';
+// toast is not used here
 import "./CropDetails.css";
 
 function Img({ src, alt, className }) {
