@@ -25,8 +25,8 @@ function AdminLogin() {
         return;
       }
 
-      // Save token + user
-      await setAuth(data.token, data.user);
+      // Save user in cache for compatibility helpers (server sets cookie)
+      await setAuth(data.user);
 
       toast.success("✅ Admin login successful");
 
