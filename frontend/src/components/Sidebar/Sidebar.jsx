@@ -63,7 +63,9 @@ const Sidebar = ({ items: itemsProp }) => {
     ],
   };
 
-  const navItems = Array.isArray(itemsProp) && itemsProp.length ? itemsProp : (roleMap[user.role] || defaultItems);
+  // normalize role (some user objects store 'Farmer' capitalized)
+  const roleKey = (user.role || '').toString().toLowerCase();
+  const navItems = Array.isArray(itemsProp) && itemsProp.length ? itemsProp : (roleMap[roleKey] || defaultItems);
 
   const navigate = useNavigate();
 
