@@ -17,7 +17,7 @@ body {
     flex-grow: 1;
     padding: 30px; /* Generous padding */
     max-width: calc(100% - 250px); /* Assumes sidebar is approx 250px wide */
-    margin-left: 0; /* Remove if sidebar is managed by parent component */
+    margin-left: 200px; /* Remove if sidebar is managed by parent component */
 }
 
 /* 4. Header Section */

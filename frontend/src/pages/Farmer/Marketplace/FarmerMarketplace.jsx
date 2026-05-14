@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import API from "../../../api";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from 'react-router-dom';
 import "./FarmerMarketplace.css";
 
 function FarmerMarketplace() {
@@ -9,6 +10,7 @@ function FarmerMarketplace() {
   const [showForm, setShowForm] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -23,7 +25,19 @@ function FarmerMarketplace() {
   // Fetch farmer’s products
   useEffect(() => {
     fetchProducts();
-  }, []);
+    // check for prefill from harvest -> marketplace
+    const params = new URLSearchParams(location.search);
+    const pre = params.get('prefill');
+    if (pre) {
+      try {
+        const p = JSON.parse(decodeURIComponent(pre));
+        setFormData((f) => ({ ...f, name: p.name || f.name, price: p.price || f.price, quantity: p.quantity || f.quantity }));
+        setShowForm(true);
+      } catch (err) {
+        console.warn('Invalid prefill', err);
+      }
+    }
+  }, [location.search]);
 
   const fetchProducts = async () => {
     try {

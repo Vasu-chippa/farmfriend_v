@@ -1,17 +1,26 @@
 // backend/src/controllers/buyerController.js
-import Buyer from "../models/Buyer.js";
+import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 // ✅ Register Buyer
 export const registerBuyer = async (req, res) => {
   try {
     const { fullName, email, password, company } = req.body;
-    const existing = await Buyer.findOne({ email });
+    const existing = await User.findOne({ email });
     if (existing) {
-      return res.status(400).json({ message: "Buyer already exists" });
+      return res.status(400).json({ message: "User already exists" });
     }
 
-    const buyer = new Buyer({ fullName, email, password, company });
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const buyer = new User({ 
+      fullName, 
+      email, 
+      password: hashedPassword, 
+      company, 
+      role: "buyer" 
+    });
     await buyer.save();
 
     const token = jwt.sign(
@@ -34,8 +43,13 @@ export const registerBuyer = async (req, res) => {
 export const loginBuyer = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const buyer = await Buyer.findOne({ email, password });
+    const buyer = await User.findOne({ email, role: "buyer" });
     if (!buyer) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    const isMatch = await bcrypt.compare(password, buyer.password);
+    if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
@@ -58,7 +72,7 @@ export const loginBuyer = async (req, res) => {
 // ✅ Get Buyer Profile
 export const getBuyerProfile = async (req, res) => {
   try {
-    const buyer = await Buyer.findById(req.user._id);
+    const buyer = await User.findById(req.user._id).select("-password");
     if (!buyer) return res.status(404).json({ message: "Buyer not found" });
     res.json({ user: buyer });
   } catch (err) {

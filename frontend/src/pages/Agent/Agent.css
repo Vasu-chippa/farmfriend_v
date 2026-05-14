@@ -8,9 +8,8 @@
 
 /* main content area (leave 300px space) */
 .agent-main {
-  margin-left: 100px; /* leave space for sidebar */
   padding: 28px;
-  width: calc(70% - 20px);
+  width: 100%;
   box-sizing: border-box;
 }
 

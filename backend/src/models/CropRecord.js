@@ -15,6 +15,7 @@ const cropRecordSchema = new mongoose.Schema(
     date: { type: Date, required: true },
     cost: { type: Number, required: true },
     quantity: { type: Number, required: true },
+    acres: { type: Number },
     description: { type: String },
     fertilizer: { type: String },
     seeds: { type: Number },

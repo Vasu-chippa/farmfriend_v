@@ -1,0 +1,8 @@
+.timeline{display:flex;flex-direction:column;gap:8px;min-width:220px}
+.timeline-steps{display:flex;gap:8px;justify-content:space-between}
+.step{display:flex;flex-direction:column;align-items:center;font-size:0.75rem;color:var(--ff-muted)}
+.step .dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#eee}
+.step.done .dot{background:var(--ff-primary);color:#fff}
+.step .label{margin-top:6px}
+.timeline-bar{height:8px;background:#e6eef0;border-radius:20px;overflow:hidden}
+.timeline-progress{height:100%;background:linear-gradient(90deg,var(--ff-primary),var(--ff-primary-600));transition:width .6s ease}

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../../../api";
 import { setAuth } from "../../../utils/auth";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+import { toast } from "react-toastify";
 import wave from "../wave.png";
 import bg from "../bg.svg";
 import avatar from "../avatar.svg";
@@ -20,14 +21,14 @@ function AdminLogin() {
       const { data } = await API.post("/auth/login", { email, password });
 
       if (data.user.role !== "admin") {
-        alert("Access denied ❌ (Admins only)");
+        toast.error("Access denied ❌ (Admins only)");
         return;
       }
 
       // Save token + user
       await setAuth(data.token, data.user);
 
-      alert("✅ Admin login successful");
+      toast.success("✅ Admin login successful");
 
       // Ensure navigation happens after saving
       setTimeout(() => {
@@ -36,7 +37,7 @@ function AdminLogin() {
 
     } catch (error) {
       console.error(error);
-      alert("❌ Login failed: " + (error.response?.data?.message || "Server error"));
+      toast.error("❌ Login failed: " + (error.response?.data?.message || "Server error"));
     }
   };
 

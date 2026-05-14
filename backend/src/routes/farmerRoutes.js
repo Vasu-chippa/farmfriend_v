@@ -1,8 +1,14 @@
 // backend/src/routes/farmerRoutes.js
 import express from "express";
 import upload from "../middlewares/upload.js";
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 import Product from "../models/Product.js";
 import Expense from "../models/Expense.js";
+import Harvest from "../models/Harvest.js";
+import Order from "../models/Order.js";
 import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -18,8 +24,35 @@ const router = express.Router();
 router.post("/products", protect, authorizeRoles("farmer"), upload.array("images"), async (req, res) => {
   try {
     const { name, description, price, quantity, quality, organic } = req.body;
-    // Save all uploaded images
-    const images = req.files?.length > 0 ? req.files.map(f => "/uploads/" + f.filename) : [];
+    // Upload saved files to Cloudinary (if configured)
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      // ensure cloudinary is configured
+      if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+        cloudinary.config({
+          cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+          api_key: process.env.CLOUDINARY_API_KEY,
+          api_secret: process.env.CLOUDINARY_API_SECRET,
+        });
+
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        for (const f of req.files) {
+          const localPath = path.join(__dirname, "../uploads", f.filename);
+          try {
+            const result = await cloudinary.uploader.upload(localPath, { folder: "farmfriend/products" });
+            images.push(result.secure_url);
+            // remove local file after upload
+            await fs.unlink(localPath).catch(() => {});
+          } catch (err) {
+            console.error("Cloudinary upload failed for", f.filename, err);
+          }
+        }
+      } else {
+        // fallback to serving local uploads
+        req.files.forEach((f) => images.push("/uploads/" + f.filename));
+      }
+    }
 
     const product = new Product({
       farmer: req.user._id,
@@ -69,6 +102,20 @@ router.get("/products/:id", protect, authorizeRoles("farmer"), async (req, res) 
   }
 });
 
+// Get orders for a specific product (farmer only)
+router.get("/products/:id/orders", protect, authorizeRoles("farmer"), async (req, res) => {
+  try {
+    const product = await Product.findOne({ _id: req.params.id, farmer: req.user._id });
+    if (!product) return res.status(404).json({ error: "Product not found or access denied" });
+
+    const orders = await Order.find({ product: req.params.id }).populate("buyer", "fullName email").sort({ createdAt: -1 });
+    res.json({ product, orders });
+  } catch (err) {
+    console.error("Error fetching product orders:", err);
+    res.status(500).json({ error: "Failed to fetch product orders" });
+  }
+});
+
 /**
  * @route   PUT /api/farmers/products/:id
  * @desc    Update product (farmer only)
@@ -78,7 +125,30 @@ router.put("/products/:id", protect, authorizeRoles("farmer"), upload.array("ima
     const { name, description, price, quantity, quality, organic } = req.body;
     const updateData = { name, description, price, quantity, quality, isOrganic: organic === "true" || organic === true };
     if (req.files && req.files.length > 0) {
-      updateData.images = req.files.map(f => "/uploads/" + f.filename);
+      const uploaded = [];
+      if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+        cloudinary.config({
+          cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+          api_key: process.env.CLOUDINARY_API_KEY,
+          api_secret: process.env.CLOUDINARY_API_SECRET,
+        });
+
+        const __filename2 = fileURLToPath(import.meta.url);
+        const __dirname2 = path.dirname(__filename2);
+        for (const f of req.files) {
+          const localPath = path.join(__dirname2, "../uploads", f.filename);
+          try {
+            const result = await cloudinary.uploader.upload(localPath, { folder: "farmfriend/products" });
+            uploaded.push(result.secure_url);
+            await fs.unlink(localPath).catch(() => {});
+          } catch (err) {
+            console.error("Cloudinary upload failed for", f.filename, err);
+          }
+        }
+      } else {
+        req.files.forEach((f) => uploaded.push("/uploads/" + f.filename));
+      }
+      updateData.images = uploaded;
     }
     const updated = await Product.findOneAndUpdate(
       { _id: req.params.id, farmer: req.user._id },
@@ -211,6 +281,7 @@ router.get("/stats", protect, authorizeRoles("farmer"), async (req, res) => {
       profitOrLoss,
     });
   } catch (err) {
+    console.error("❌ Error in /api/farmers/stats:", err);
     res.status(500).json({ error: "Failed to fetch stats" });
   }
 });

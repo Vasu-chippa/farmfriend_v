@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
+import bcrypt from "bcryptjs";
 
 // 📊 Dashboard Summary
 export const getDashboardData = async (req, res) => {
@@ -64,7 +65,8 @@ export const addFarmer = async (req, res) => {
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: "Farmer already exists" });
 
-    const farmer = new User({ fullName, email, password, role: "farmer" });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const farmer = new User({ fullName, email, password: hashedPassword, role: "farmer" });
     await farmer.save();
     res.status(201).json({ message: "Farmer added successfully", farmer });
   } catch (err) {
@@ -106,6 +108,31 @@ export const getAllAgents = async (req, res) => {
   }
 };
 
+export const addAgent = async (req, res) => {
+  try {
+    const { fullName, email, password, phone, region } = req.body;
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ message: "Agent already exists" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const agent = new User({ fullName, email, password: hashedPassword, phone, region, role: "agent" });
+    await agent.save();
+    res.status(201).json({ message: "Agent added successfully", agent });
+  } catch (err) {
+    res.status(500).json({ message: "Error adding agent", error: err.message });
+  }
+};
+
+export const deleteAgent = async (req, res) => {
+  try {
+    const agent = await User.findOneAndDelete({ _id: req.params.id, role: "agent" });
+    if (!agent) return res.status(404).json({ message: "Agent not found" });
+    res.json({ message: "Agent deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting agent", error: err.message });
+  }
+};
+
 // 👤 Buyers
 export const getAllBuyers = async (req, res) => {
   try {
@@ -122,7 +149,8 @@ export const addBuyer = async (req, res) => {
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: "Buyer already exists" });
 
-    const buyer = new User({ fullName, email, password, role: "buyer" });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const buyer = new User({ fullName, email, password: hashedPassword, role: "buyer" });
     await buyer.save();
     res.status(201).json({ message: "Buyer added successfully", buyer });
   } catch (err) {
@@ -219,5 +247,64 @@ export const approveProduct = async (req, res) => {
     res.json({ message: "Product approval updated", product });
   } catch (err) {
     res.status(500).json({ message: "Error approving product", error: err.message });
+  }
+};
+
+export const addProduct = async (req, res) => {
+  try {
+    const { name, description, price, quantity, quality, organic, farmerId } = req.body;
+    const product = new Product({
+      name,
+      description,
+      price,
+      quantity,
+      quality,
+      isOrganic: organic === "true" || organic === true,
+      farmer: farmerId, // Admin can specify which farmer owns this
+    });
+    await product.save();
+    res.status(201).json({ message: "Product added successfully", product });
+  } catch (err) {
+    res.status(500).json({ message: "Error adding product", error: err.message });
+  }
+};
+
+export const deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    res.json({ message: "Product deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting product", error: err.message });
+  }
+};
+
+// 📈 Admin reports
+export const getReports = async (req, res) => {
+  try {
+    // Total completed orders (sold)
+    const completedCount = await Order.countDocuments({ status: "Completed" });
+
+    // Pending orders (not completed and not cancelled)
+    const pendingCount = await Order.countDocuments({ status: { $in: ["Ordered", "Packed", "Shipped"] } });
+
+    // Total revenue from paid payments
+    const paidOrders = await Order.find({ "payment.status": "Paid" }).lean();
+
+    const totalRevenue = paidOrders.reduce((sum, o) => sum + (o.payment?.amount ?? o.total ?? 0), 0);
+
+    // Commission (use 5% as platform commission placeholder)
+    const commissionRate = 0.05;
+    const commissionEarned = totalRevenue * commissionRate;
+
+    res.json({
+      totalSold: completedCount,
+      pendingOrders: pendingCount,
+      revenue: totalRevenue,
+      commission: commissionEarned,
+      commissionRate,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error generating reports", error: err.message });
   }
 };

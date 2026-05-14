@@ -1,0 +1,45 @@
+.harvest-container{padding:24px;background:linear-gradient(135deg,#eef2ff,#f5f3ff);min-height:100vh}
+
+.harvest-container h2{font-size:26px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+
+.harvest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;margin-top:16px}
+
+.harvest-card{background:rgba(255,255,255,0.7);border-radius:16px;padding:12px;display:flex;flex-direction:column;backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,0.06);transition:all 0.4s ease;position:relative;overflow:hidden}
+
+.harvest-card:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 20px 40px rgba(124,58,237,0.2)}
+
+.harvest-card::before{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent,rgba(124,58,237,0.08),transparent);opacity:0;transition:0.4s}
+
+.harvest-card:hover::before{opacity:1}
+
+.harvest-image{width:100%;height:160px;object-fit:cover;border-radius:12px;transition:0.4s;cursor:pointer}
+
+.harvest-card:hover .harvest-image{transform:scale(1.08)}
+
+.harvest-details{padding:10px 4px 0 4px;width:100%}
+
+.harvest-details h3{margin:6px 0;font-size:18px;font-weight:700;color:#2b0036}
+
+.harvest-details p{font-size:13px;color:#555;margin:2px 0}
+
+.harvest-details b{color:#222}
+
+.harvest-actions{display:flex;gap:8px;margin-top:10px;width:100%}
+
+.sell-btn{flex:1;background:linear-gradient(135deg,#22c55e,#4ade80);color:#fff;border:none;padding:8px;border-radius:10px;font-size:13px;cursor:pointer;transition:0.3s}
+
+.sell-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(34,197,94,0.4)}
+
+.remove-btn{flex:1;background:#fff;border:1px solid #eee;padding:8px;border-radius:10px;font-size:13px;cursor:pointer;transition:0.3s}
+
+.remove-btn:hover{background:#fee2e2;color:#dc2626;border-color:#fecaca}
+
+.remove-btn:disabled{opacity:0.6;cursor:not-allowed}
+
+.highlighted{animation:highlightPulse 2s ease}
+
+@keyframes highlightPulse{0%{box-shadow:0 0 0 rgba(124,58,237,0)}50%{box-shadow:0 0 25px rgba(124,58,237,0.5)}100%{box-shadow:0 0 0 rgba(124,58,237,0)}}
+
+.empty{padding:40px;text-align:center;color:#888;font-size:16px}
+
+.harvest-container h2::after{content:'';width:40px;height:4px;background:linear-gradient(90deg,#7c3aed,#a855f7);border-radius:10px;margin-left:10px}

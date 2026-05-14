@@ -1,19 +1,32 @@
-// src/components/RequireAuth.jsx
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { fetchCurrentUser } from "../../utils/auth";
 
-const RequireAuth = ({ allowedRoles }) => {
-  const token = localStorage.getItem("token");
-  const user = token ? JSON.parse(localStorage.getItem("user")) : null;
+const RequireAuth = ({ allowedRoles, redirectTo = "/login", children }) => {
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const u = await fetchCurrentUser();
+      if (mounted) {
+        setUser(u);
+        setLoading(false);
+      }
+    })();
+    return () => (mounted = false);
+  }, []);
+
+  if (loading) return null;
+
+  if (!user) return <Navigate to={redirectTo} replace />;
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  return <Outlet />;
+  return <>{children}</>;
 };
 
 export default RequireAuth;

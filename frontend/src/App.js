@@ -3,6 +3,9 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { useLocation } from "react-router-dom";
+import { AnimatePresence } from 'framer-motion';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 // Guards
 import RequireAuth from "./components/guards/RequireAuth";
 
@@ -10,6 +13,7 @@ import RequireAuth from "./components/guards/RequireAuth";
 import AdminLayout from "./layouts/AdminLayout";
 import BuyerLayout from "./layouts/BuyerLayout";
 import AgentLayout from "./layouts/AgentLayout";
+import FarmerLayout from "./layouts/FarmerLayout";
 
 import Home from "./pages/Home/Home";
 import NotFound from "./pages/NotFound/NotFound";
@@ -20,17 +24,19 @@ import FarmerRegister from "./pages/Auth/FarmerRegister/FarmerRegister";
 import BuyerLogin from "./pages/Auth/BuyerLogin/BuyerLogin";
 import BuyerRegister from "./pages/Auth/BuyerRegister/BuyerRegister";
 import AgentLogin from "./pages/Auth/AgentLogin/AgentLogin";
+import AgentRegister from "./pages/Auth/AgentRegister/AgentRegister";
 import AdminLogin from "./pages/Auth/AdminLogin/AdminLogin";
 
 // Farmer Section
 import FarmerDashboard from "./pages/Farmer/Dashboard/FarmerDashboard";
 import FarmerCrops from "./pages/Farmer/Crops/FarmerCrops";
 import HarvestList from "./pages/Farmer/Harvest/HarvestList";
-import CropDetailsView from "./pages/Farmer/Crops/CropDetailsView";
+import FarmerCropDetails from "./pages/Farmer/Crops/FarmerCropDetails";
 import CropDetails from "./pages/Farmer/Marketplace/CropDetails";
 import ExpenseTracker from "./pages/Farmer/ExpenseTracker/ExpenseTracker";
 import FarmerMarketplace from "./pages/Farmer/Marketplace/FarmerMarketplace";
 import FarmerProfile from "./pages/Farmer/Profile/FarmerProfile";
+import FarmerProfileEdit from "./pages/Farmer/Profile/FarmerProfileEdit";
 import CropRecords from "./pages/Farmer/Harvest/CropRecords";
 
 // Buyer Section
@@ -39,6 +45,7 @@ import Marketplace from "./pages/Buyer/Marketplace/Marketplace";
 import CropPurchase from "./pages/Buyer/CropPurchase/CropPurchase";
 import MyOrders from "./pages/Buyer/Orders/MyOrders";
 import Profile from "./pages/Buyer/Profile/Profile";
+import OrderConfirmation from "./pages/Buyer/Orders/OrderConfirmation";
 
 // Agent Section
 // Agent Section
@@ -58,17 +65,21 @@ import ManageAgents from "./pages/Admin/Users/ManageAgents";
 import ManageOrders from "./pages/Admin/Orders/ManageOrders";
 import ManageProducts from "./pages/Admin/Products/ManageProducts";
 import ManagePayments from "./pages/Admin/Payments/ManagePayments";
+import Reports from "./pages/Admin/Reports/Reports";
 
 
 function App() {
   const location = useLocation();
-  const hideNavbar = location.pathname.startsWith("/admin");
+  const isLoggedIn = Boolean(localStorage.getItem("token"));
+  // Show navbar only on Home (/) and any login routes (ending with /login)
+  const showNavbar = location.pathname === "/" || /\/login$/.test(location.pathname);
 
   return (
     <>
-     {!hideNavbar}
-      <Navbar />
-      <Routes>
+      {showNavbar && <Navbar />}
+      <ToastContainer position="top-right" autoClose={3000} />
+      <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
         {/* Home */}
         <Route path="/" element={<Home />} />
 
@@ -78,14 +89,17 @@ function App() {
         <Route path="/buyer/login" element={<BuyerLogin />} />
         <Route path="/buyer/register" element={<BuyerRegister />} />
         <Route path="/agent/login" element={<AgentLogin />} />
+        <Route path="/agent/register" element={<AgentRegister />} />
         <Route path="/admin/login" element={<AdminLogin />} />
 
-        {/* Farmer Protected Routes */}
+        {/* Farmer Protected Routes (wrapped with FarmerLayout to include Sidebar) */}
         <Route
           path="/farmer/dashboard"
           element={
             <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <FarmerDashboard />
+              <FarmerLayout>
+                <FarmerDashboard />
+              </FarmerLayout>
             </RequireAuth>
           }
         />
@@ -93,7 +107,9 @@ function App() {
           path="/farmer/crops"
           element={
             <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <FarmerCrops />
+              <FarmerLayout>
+                <FarmerCrops />
+              </FarmerLayout>
             </RequireAuth>
           }
         />
@@ -101,15 +117,39 @@ function App() {
           path="/farmer/harvest"
           element={
             <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <HarvestList />
+              <FarmerLayout>
+                <HarvestList />
+              </FarmerLayout>
             </RequireAuth>
           }
         />
         <Route
-          path="/farmer/crop-details/:id"
+          path="/farmer/harvest/:cropId"
           element={
             <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <CropDetailsView />
+              <FarmerLayout>
+                <CropRecords />
+              </FarmerLayout>
+            </RequireAuth>
+          }
+        />
+       <Route
+  path="/farmer/crops/:id"
+  element={
+    <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
+      <FarmerLayout>
+        <FarmerCropDetails />
+      </FarmerLayout>
+    </RequireAuth>
+  }
+/>
+         <Route
+          path="/farmer/marketplace/:id"
+          element={
+            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
+              <FarmerLayout>
+                <CropDetails />
+              </FarmerLayout>
             </RequireAuth>
           }
         />
@@ -117,7 +157,9 @@ function App() {
           path="/farmer/expenses"
           element={
             <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <ExpenseTracker />
+              <FarmerLayout>
+                <ExpenseTracker />
+              </FarmerLayout>
             </RequireAuth>
           }
         />
@@ -125,23 +167,30 @@ function App() {
           path="/farmer/marketplace"
           element={
             <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <FarmerMarketplace />
+              <FarmerLayout>
+                <FarmerMarketplace />
+              </FarmerLayout>
             </RequireAuth>
           }
         />
-        <Route
-          path="/farmer/marketplace/:id"
-          element={
-            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <CropDetails />
-            </RequireAuth>
-          }
-        />
+       
         <Route
           path="/farmer/profile"
           element={
             <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <FarmerProfile />
+              <FarmerLayout>
+                <FarmerProfile />
+              </FarmerLayout>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/farmer/profile/edit"
+          element={
+            <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
+              <FarmerLayout>
+                <FarmerProfileEdit />
+              </FarmerLayout>
             </RequireAuth>
           }
         />
@@ -149,7 +198,9 @@ function App() {
           path="/farmer/crop-records/:cropId"
           element={
             <RequireAuth allowedRoles={["farmer"]} redirectTo="/farmer/login">
-              <CropRecords />
+              <FarmerLayout>
+                <CropRecords />
+              </FarmerLayout>
             </RequireAuth>
           }
         />
@@ -191,6 +242,16 @@ function App() {
             <RequireAuth allowedRoles={["buyer"]} redirectTo="/buyer/login">
               <BuyerLayout>
                 <MyOrders />
+              </BuyerLayout>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/buyer/orders/confirmation/:orderId"
+          element={
+            <RequireAuth allowedRoles={["buyer"]} redirectTo="/buyer/login">
+              <BuyerLayout>
+                <OrderConfirmation />
               </BuyerLayout>
             </RequireAuth>
           }
@@ -281,43 +342,18 @@ function App() {
   <Route path="users/farmers" element={<ManageFarmers />} />
   <Route path="users/buyers" element={<ManageBuyers />} />
   <Route path="users/agents" element={<ManageAgents />} />
+  <Route path="reports" element={<Reports />} />
   <Route path="orders" element={<ManageOrders />} />
   <Route path="products" element={<ManageProducts />} />
   <Route path="payments" element={<ManagePayments />} />
 </Route>
 
 
-<Route
-  path="/agent/payments"
-  element={
-    <RequireAuth allowedRoles={["agent"]} redirectTo="/agent/login">
-      <AgentLayout>
-        <AgentPayments />
-      </AgentLayout>
-    </RequireAuth>
-  }
-/>
-{/* ✅ Admin Protected Routes */}
-<Route
-  path="/admin/*"
-  element={
-    <RequireAuth allowedRoles={["admin"]} redirectTo="/admin/login">
-      <AdminLayout />
-    </RequireAuth>
-  }
->
-  <Route path="dashboard" element={<AdminDashboard />} />
-  <Route path="users/farmers" element={<ManageFarmers />} />
-  <Route path="users/buyers" element={<ManageBuyers />} />
-  <Route path="users/agents" element={<ManageAgents />} />
-  <Route path="orders" element={<ManageOrders />} />
-  <Route path="products" element={<ManageProducts />} />
-  <Route path="payments" element={<ManagePayments />} />
-</Route>
 
         {/* Not Found */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </AnimatePresence>
     </>
   );
 }

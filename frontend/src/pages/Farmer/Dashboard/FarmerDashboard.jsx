@@ -1,158 +1,140 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import API from "../../../api";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import Chart from "../../../components/Chart";
+import dashboardService from "../../../services/dashboardService";
 import "./FarmerDashboard.css";
 
-const POLL_INTERVAL = 30000; // 30 seconds
+const POLL_INTERVAL = 30000;
 
 const FarmerDashboard = () => {
-  const [stats, setStats] = useState({
-    totalCrops: 0,
-    totalExpenses: 0,
-    profitOrLoss: 0,
-    totalHarvest: 0,
-    totalIncome: 0,
-  });
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [statsRight, setStatsRight] = useState(null);
 
-  const fetchStats = async () => {
-    setLoading(true);
+  const loadAll = async () => {
     try {
-      // Assuming endpoint returns stats as in your backend controller
-      const res = await API.get("/farmers/stats");
-      const {
-        totalCrops,
-        totalHarvest,
-        totalExpenses,
-        totalIncome,
-        profitOrLoss,
-      } = res.data;
-
-      setStats({
-        totalCrops,
-        totalHarvest,
-        totalExpenses,
-        totalIncome,
-        profitOrLoss,
-      });
-
-      setNotifications([
-        // 🔑 Notification text updated for clarity
-        { id: 1, text: `${totalHarvest} units of crops are ready for market.` },
-        { id: 2, text: `Expected revenue: ₹${totalIncome}` },
+      const [sRes, stRes] = await Promise.all([
+        dashboardService.fetchSummary(),
+        dashboardService.fetchStats(),
       ]);
-
-      setLastUpdated(new Date());
+      setSummary(sRes.data);
+      setStatsRight(stRes.data);
     } catch (err) {
-      console.error("Error fetching stats", err);
-      setNotifications([
-        { id: 0, text: "Failed to load stats. Please try again later." }
-      ]);
+      console.error("Dashboard load failed", err);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
-
-    fetchStats();
-    const interval = setInterval(fetchStats, POLL_INTERVAL);
-    return () => clearInterval(interval);
+    loadAll();
+    const iv = setInterval(loadAll, POLL_INTERVAL);
+    return () => clearInterval(iv);
   }, []);
 
-  const chartData = [
-    { name: "Expenses", value: stats.totalExpenses },
-    { name: "Revenue", value: stats.totalIncome },
-  ];
-
-  const farmerName = localStorage.getItem("farmerName") || "Farmer";
-
-  const getProfitStyle = (profit) =>
-    profit > 0 ? { color: "#388e3c", fontWeight: 700 }
-      : profit < 0 ? { color: "#d32f2f", fontWeight: 700 }
-      : { color: "#333", fontWeight: 700 };
+  const farmerName = summary?.farmerName || localStorage.getItem("farmerName") || "Farmer";
 
   return (
-    <div className="farmer-dashboard">
-      <h2>👨‍🌾 Welcome, {farmerName}</h2>
+    <div className="premium-dashboard">
+      {/* HEADER AREA */}
+      <header className="dash-header">
+        <div className="welcome-text">
+          <h1>👋 Good Morning, {farmerName}!</h1>
+          <p>Here’s what’s happening on your farm today.</p>
+        </div>
+        <div className="header-controls">
+          <div className="icon-pill">
+             <span className="bell-icon">🔔</span>
+             <span className="count-badge">{statsRight?.harvestListCount ?? 0}</span>
+          </div>
+          <div className="profile-pill">
+            <div className="avatar-circle">{farmerName.charAt(0)}</div>
+            <span>{farmerName}</span>
+          </div>
+        </div>
+      </header>
 
-      {/* Last updated */}
-      <div className="last-updated">
-        {lastUpdated && <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>}
+      {/* TOP STATS CARDS */}
+      <section className="top-stats-grid">
+        <div className="glass-card stat-item">
+          <div className="icon-box green-bg">🌱</div>
+          <div className="stat-info">
+            <span className="v-label">Total Crops</span>
+            <span className="v-value">{summary?.totalCrops ?? 0}</span>
+            <span className="v-trend positive">↑ 8%</span>
+          </div>
+        </div>
+        <div className="glass-card stat-item">
+          <div className="icon-box orange-bg">🌾</div>
+          <div className="stat-info">
+            <span className="v-label">Total Harvested</span>
+            <span className="v-value">{summary?.totalHarvested ?? 0}</span>
+            <span className="v-trend positive">↑ 15%</span>
+          </div>
+        </div>
+        <div className="glass-card stat-item">
+          <div className="icon-box red-bg">🧧</div>
+          <div className="stat-info">
+            <span className="v-label">Total Expenses</span>
+            <span className="v-value">₹{summary?.totalExpenses?.toLocaleString() ?? 0}</span>
+            <span className="v-trend negative">↑ 5%</span>
+          </div>
+        </div>
+        <div className="glass-card stat-item">
+          <div className="icon-box blue-bg">💰</div>
+          <div className="stat-info">
+            <span className="v-label">Profit / Loss</span>
+            <span className="v-value">₹{summary?.profit?.toLocaleString() ?? 0}</span>
+            <span className="v-trend positive">↑ 22%</span>
+          </div>
+        </div>
+      </section>
+
+      {/* MAIN CONTENT ROW (Chart + Sidebar) */}
+      <div className="dashboard-main-row">
+        <div className="glass-card chart-section">
+          <div className="card-header">
+            <h3>Income vs Expenses</h3>
+            <select className="premium-select"><option>This Season</option></select>
+          </div>
+          <Chart />
+        </div>
+
+        <aside className="vertical-stats">
+          <div className="glass-card side-stat">
+            <div className="side-icon green-light">🌱</div>
+            <div className="side-text">
+               <p>Crops in Harvest List</p>
+               <h3>{statsRight?.harvestListCount ?? 0}</h3>
+            </div>
+            <span className="chevron">›</span>
+          </div>
+          <div className="glass-card side-stat">
+            <div className="side-icon orange-light">🏪</div>
+            <div className="side-text">
+               <p>Crops in Marketplace</p>
+               <h3>{statsRight?.marketplaceCount ?? 0}</h3>
+            </div>
+            <span className="chevron">›</span>
+          </div>
+          <div className="glass-card side-stat">
+            <div className="side-icon blue-light">🛒</div>
+            <div className="side-text">
+               <p>Items/Products Sold</p>
+               <h3>{statsRight?.soldItemsCount ?? 0}</h3>
+            </div>
+            <span className="chevron">›</span>
+          </div>
+        </aside>
       </div>
 
-      {/* Loader */}
-      {loading && (
-        <div className="spinner" style={{ margin: "16px 0" }}>
-          <div className="loader"></div>
+      {/* FOOTER BANNER */}
+      <footer className="glass-card success-banner">
+        <div className="banner-info">
+          <span className="leaf-bg">🌿</span>
+          <div>
+            <strong>Keep it up, {farmerName}!</strong>
+            <p>Your farm is performing 12% better than last season.</p>
+          </div>
         </div>
-      )}
-
-      {/* Summary Cards */}
-      <div className="summary-cards">
-        <div className="card">
-          <h3>Total Crops</h3>
-          <p>{stats.totalCrops}</p>
-        </div>
-        <div className="card">
-          <h3>Total Harvested Crops</h3>
-          <p>{stats.totalHarvest}</p>
-        </div>
-        <div className="card">
-          <h3>Total Expenses</h3>
-          <p>₹{stats.totalExpenses}</p>
-        </div>
-        <div className="card">
-          <h3>Profit / Loss</h3>
-          <p style={getProfitStyle(stats.profitOrLoss)}>
-            {Number(stats.profitOrLoss) >= 0 ? `+ ₹${stats.profitOrLoss}` : `- ₹${Math.abs(stats.profitOrLoss)}`}
-          </p>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="quick-actions">
-        <Link to="/farmer/crops" className="btn">🌱 My Crops</Link>
-        <Link to="/farmer/harvest" className="btn">🌾 Harvest List</Link>
-        <Link to="/farmer/expenses" className="btn">💰 Add Expense</Link>
-        <Link to="/farmer/marketplace" className="btn">🛒 Marketplace</Link>
-      </div>
-
-      {/* Chart Section */}
-      <div className="chart-section">
-        <h3>Income vs Expenses</h3>
-        {/* 🔑 Conditional render check for Recharts stability */}
-        {!loading && chartData && chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#4CAF50" />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-            // Fallback text if no data is available after loading
-            !loading && <p>No financial data to display yet.</p>
-        )}
-      </div>
-
-      {/* Notifications */}
-      <div className="notifications">
-        <h3>🔔 Notifications</h3>
-        {notifications.length > 0 ? (
-          <ul>
-            {notifications.map((n) => (
-              <li key={n.id}>{n.text}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>No notifications yet.</p>
-        )}
-      </div>
+        <button className="premium-btn">View Full Report</button>
+      </footer>
     </div>
   );
 };

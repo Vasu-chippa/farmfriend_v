@@ -2,14 +2,17 @@
   display: flex;
   min-height: 100vh;
   background: #f8f9fa;
+  width: 1900px;
 }
 
 /* Content next to Sidebar */
 .buyer-dashboard-content {
   flex: 1;
-  margin-left: 200px; /* 👈 leave space for sidebar */
-  padding: 25px;
+  padding: 28px 32px;
   background: #f8f9fa;
+  max-width:1200px;
+  margin: 0 auto; /* center inside app-main */
+  box-sizing:border-box;
 }
 
 .buyer-dashboard-content h2 {

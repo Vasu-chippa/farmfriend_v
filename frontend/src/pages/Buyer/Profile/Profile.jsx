@@ -1,26 +1,25 @@
+// src/pages/Buyer/Profile.jsx
+
 import React, { useState, useEffect } from "react";
 import API from "../../../api";
-import BuyerSidebar from "../../../components/BuyerSidebar";
+import Button from "../../../components/ui/Button";
 import "./Profile.css";
 
 const Profile = () => {
-  const [profile, setProfile] = useState({ fullName: "", email: "", company: "" });
+  const [profile, setProfile] = useState({});
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    API
-      .get("/buyers/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    API.get("/buyers/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then((res) => {
         setProfile(res.data.user);
         setLoading(false);
       })
-      .catch((err) => {
-        console.error("❌ Error fetching profile:", err);
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   }, []);
 
   const handleChange = (e) => {
@@ -30,18 +29,21 @@ const Profile = () => {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("token");
+
       await API.put(
         "/buyers/profile",
         {
           fullName: profile.fullName,
-          company: profile.company,
+          phone: profile.phone,
+          address: profile.address,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       alert("✅ Profile updated!");
+      setIsEditing(false);
     } catch (err) {
-      console.error("❌ Error updating profile:", err);
-      alert("Failed to update profile");
+      alert("❌ Failed to update profile");
     }
   };
 
@@ -49,44 +51,109 @@ const Profile = () => {
 
   return (
     <div className="profile-layout">
-      {/* Sidebar */}
-      <BuyerSidebar />
+      <div className="profile-container">
 
-      {/* Content */}
-      <div className="profile-content">
         <div className="profile-card">
-          <h2>👤 My Profile</h2>
-          <div className="profile-form">
-            <label>
-              Full Name:
-              <input
-                type="text"
-                name="fullName"
-                value={profile.fullName}
-                onChange={handleChange}
-              />
-            </label>
 
-            <label>
-              Email:
-              <input type="email" name="email" value={profile.email} disabled />
-            </label>
+          {/* LEFT SIDE */}
+          <div className="profile-left">
+            <div className="avatar-large">
+              {profile.fullName?.charAt(0).toUpperCase()}
+            </div>
 
-            <label>
-              Company:
-              <input
-                type="text"
-                name="company"
-                value={profile.company}
-                onChange={handleChange}
-              />
-            </label>
+            <h2>{profile.fullName}</h2>
+            <p className="role">Buyer</p>
 
-            <button className="btn-save" onClick={handleSave}>
-              Save Changes
-            </button>
+            <div className="stats">
+              <div>
+                <span>{profile.orderCount || 0}</span>
+                <p>Orders</p>
+              </div>
+              <div>
+                <span>₹{profile.totalSpent || 0}</span>
+                <p>Spent</p>
+              </div>
+            </div>
           </div>
+
+          {/* RIGHT SIDE */}
+          <div className="profile-right">
+
+            <div className="profile-header-row">
+              <h3>Profile Details</h3>
+
+              <button
+                className="edit-btn"
+                onClick={() => {
+                  if (isEditing) {
+                    handleSave();
+                  } else {
+                    setIsEditing(true);
+                  }
+                }}
+              >
+                {isEditing ? "Save Changes" : "Edit Profile"}
+              </button>
+            </div>
+
+            <div className="info-grid">
+              <label>
+                Full Name
+                <input
+                  name="fullName"
+                  value={profile.fullName || ""}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                />
+              </label>
+
+              <label>
+                Email
+                <input value={profile.email || ""} disabled />
+              </label>
+
+              <label>
+                Phone
+                <input
+                  name="phone"
+                  value={profile.phone || ""}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                />
+              </label>
+
+              <label>
+                Address
+                <input
+                  name="address"
+                  value={profile.address || ""}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                />
+              </label>
+
+              <label>
+                Buyer ID
+                <input value={profile._id || ""} disabled />
+              </label>
+
+              <label>
+                Joined
+                <input
+                  value={
+                    profile.createdAt
+                      ? new Date(profile.createdAt).toLocaleDateString()
+                      : "-"
+                  }
+                  disabled
+                />
+              </label>
+            </div>
+
+          </div>
+
         </div>
+
       </div>
     </div>
   );

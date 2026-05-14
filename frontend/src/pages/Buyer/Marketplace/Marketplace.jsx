@@ -2,6 +2,10 @@
 import React, { useEffect, useState } from "react";
 import API from "../../../api";
 import { useNavigate } from "react-router-dom";
+import Card from "../../../components/ui/Card";
+import Button from "../../../components/ui/Button";
+import LoadingSkeleton from "../../../components/ui/LoadingSkeleton";
+import { motion } from 'framer-motion';
 import "./Marketplace.css";
 
 const Marketplace = () => {
@@ -24,7 +28,7 @@ const Marketplace = () => {
     fetchProducts();
   }, []);
 
-  if (loading) return <div className="mp-loading">Loading marketplace...</div>;
+  if (loading) return <LoadingSkeleton count={6} />;
 
   return (
     <div className="mp-layout">
@@ -32,60 +36,37 @@ const Marketplace = () => {
         <h2>🌾 Marketplace</h2>
       </div>
 
-      <div className="mp-grid">
-        {products.length === 0 && (
-          <div className="mp-empty">
-            No products available. Farmers haven't uploaded anything yet.
-          </div>
-        )}
-
-        {products.map((p) => {
-          // const imgPath =
-          //   p.images && p.images.length
-          //     ? `http://localhost:5000${p.images[0]}`
-          //     : `${process.env.PUBLIC_URL}/cropimages/default.jpeg`;
-
-          return (
-            <div key={p._id} className="mp-card">
-              <div
-                className="mp-card-image"
-                onClick={() => navigate(`/buyer/marketplace/${p._id}`)}
-              >
-                {/* <img
-                  src={imgPath}
-                  alt={p.name}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = `${process.env.PUBLIC_URL}/cropimages/default.jpeg`;
-                  }}
-                /> */}
-              </div>
-
-              <div className="mp-card-body">
-                <h3 className="mp-card-title">{p.name}</h3>
-                {/* <p className="mp-card-desc">{p.description || "No description"}</p> */}
-                <div   onClick={() => navigate(`/buyer/marketplace/${p._id}`)}
-                      className="mp-meta">
-                  <div><strong>Price:</strong> ₹{p.price}/kg</div>
-                  <div><strong>Qty:</strong> {p.quantity} kg</div>
-                  {/* <div><strong>Quality:</strong> {p.quality || "-"}</div> */}
-                  {/* <div><strong>Organic:</strong> {p.isOrganic ? "✅ Yes" : "❌ No"}</div> */}
-                  {/* <div className="mp-farmer"><strong>Farmer:</strong> {p.farmer?.name || "Unknown"}</div> */}
+      {products.length === 0 ? (
+        <div className="mp-empty">No products available. Farmers haven't uploaded anything yet.</div>
+      ) : (
+        <div className="market-grid">
+          {products.map((p) => (
+            <motion.div key={p._id} whileHover={{ scale: 1.02 }} initial={{opacity:0, y:8}} animate={{opacity:1,y:0}} transition={{duration:0.28}}>
+              <Card className="mp-card">
+                <div className="mp-card-image" onClick={() => navigate(`/buyer/marketplace/${p._id}`)}>
+                  {p.images && p.images.length ? (
+                    <img src={p.images[0].startsWith('http') ? p.images[0] : `http://localhost:5000${p.images[0]}`} alt={p.name} onError={(e)=>{e.target.onerror=null; e.target.src=`${process.env.PUBLIC_URL}/cropimages/default.jpeg`}} />
+                  ) : (
+                    <img src={`${process.env.PUBLIC_URL}/cropimages/default.jpeg`} alt={p.name} />
+                  )}
                 </div>
 
-                <div className="mp-actions">
-                  <button
-                    onClick={() => navigate(`/buyer/marketplace/${p._id}`)}
-                    className="mp-btn view-btn"
-                  >
-                    View & Buy
-                  </button>
+                <div className="mp-card-body">
+                  <h3 className="mp-card-title">{p.name}</h3>
+                  <div className="mp-meta">
+                    <div><strong>Price:</strong> ₹{p.price}/kg</div>
+                    <div><strong>Qty:</strong> {p.quantity} kg</div>
+                  </div>
+
+                  <div className="mp-actions">
+                    <Button onClick={() => navigate(`/buyer/marketplace/${p._id}`)}>View & Buy</Button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

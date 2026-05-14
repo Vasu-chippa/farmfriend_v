@@ -6,6 +6,7 @@ const cropSchema = new mongoose.Schema({
   description: { type: String },
   price: { type: Number, required: true },
   quantity: { type: Number, required: true },
+  acres: { type: Number, default: 0 },
   image: { type: String, default: "" }, // ✅ keep single image for now
   status: {
     type: String,

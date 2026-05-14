@@ -1,5 +1,6 @@
 // apps/backend/src/controllers/cropRecordController.js
 import CropRecord from "../models/CropRecord.js";
+import mongoose from "mongoose";
 
 /**
  * Create record
@@ -15,6 +16,7 @@ export const addRecord = async (req, res) => {
       date,
       cost,
       quantity,
+      acres,
       description,
       fertilizer,
       seeds,
@@ -33,6 +35,7 @@ export const addRecord = async (req, res) => {
       date,
       cost,
       quantity,
+      acres,
       description,
       fertilizer,
       seeds,
@@ -57,8 +60,15 @@ export const getRecords = async (req, res) => {
       return res.status(401).json({ error: "Unauthorized. Please login again." });
     }
 
+    // validate cropId to avoid Mongoose CastError for invalid ObjectId values
+    const { cropId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(cropId)) {
+      // return empty list instead of 500 when caller passes an invalid id
+      return res.json([]);
+    }
+
     const records = await CropRecord.find({
-      cropId: req.params.cropId,
+      cropId,
       farmer: req.user._id,
     }).sort({ date: -1 });
 
@@ -82,6 +92,7 @@ export const updateRecord = async (req, res) => {
       date,
       cost,
       quantity,
+      acres,
       description,
       fertilizer,
       seeds,
@@ -91,6 +102,7 @@ export const updateRecord = async (req, res) => {
       date,
       cost,
       quantity,
+      acres,
       description,
       fertilizer,
       seeds,

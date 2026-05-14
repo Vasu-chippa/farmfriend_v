@@ -1,9 +1,21 @@
 // apps/frontend/src/components/AgentSidebar.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { fetchCurrentUser } from "../utils/auth";
 import { NavLink } from "react-router-dom";
 import "./AgentSidebar.css";
 
 function AgentSidebar() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const u = await fetchCurrentUser();
+      if (mounted) setUser(u);
+    })();
+    return () => (mounted = false);
+  }, []);
+
   return (
     <aside className="agent-sidebar">
       <div className="agent-brand">FarmFriend — Agent</div>
@@ -32,7 +44,7 @@ function AgentSidebar() {
         </ul>
       </nav>
       <div className="sidebar-footer">
-        <small>Logged as: <strong>{localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).fullName : "Agent"}</strong></small>
+        <small>Logged as: <strong>{user ? user.fullName : "Agent"}</strong></small>
       </div>
     </aside>
   );

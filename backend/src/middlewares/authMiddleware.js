@@ -1,25 +1,39 @@
 // apps/backend/src/middlewares/authMiddleware.js
 import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
 /**
  * protect middleware:
  * - verifies token
  * - sets req.user = { _id, id, role } (normalized)
  */
-export const protect = (req, res, next) => {
+export const protect = async (req, res, next) => {
   try {
+    let token;
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "No token, authorization denied" });
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
+    } else if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
     }
 
-    const token = authHeader.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "No token, authorization denied" });
+    }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const userId = decoded._id || decoded.id || decoded.userId || decoded.uid;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(401).json({ message: "User not found, authorization denied" });
+    }
 
     // normalized user object: always provide _id
     req.user = {
       ...decoded,
-      _id: decoded._id || decoded.id || decoded.userId || decoded.uid,
+      _id: userId,
+      role: user.role, // fresh role from db
     };
 
     next();

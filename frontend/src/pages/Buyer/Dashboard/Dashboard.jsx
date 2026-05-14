@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import API from "../../../api";
 import { useNavigate } from "react-router-dom";
-import BuyerSidebar from "../../components/BuyerSidebar";
 import "./Dashboard.css";
 
 const Dashboard = () => {
@@ -28,7 +27,6 @@ const Dashboard = () => {
 
   return (
     <div className="buyer-layout">
-      <BuyerSidebar />
       <div className="buyer-main">
         <h2>Buyer Dashboard</h2>
         <div className="stats-grid">

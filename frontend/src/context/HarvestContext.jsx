@@ -11,9 +11,7 @@ export const HarvestProvider = ({ children }) => {
   // fetch harvest list
   const fetchHarvest = useCallback(async () => {
     try {
-      const res = await API.get("/harvest", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await API.get("/harvest");
       setHarvest(res.data.crops || []);
     } catch (err) {
       console.error("❌ Error fetching harvest:", err);
@@ -33,14 +31,10 @@ export const HarvestProvider = ({ children }) => {
       if (isInHarvest(crop._id)) {
         const harvestItem = harvest.find((h) => h.cropId === crop._id);
         if (!harvestItem) return;
-        await API.delete(`/harvest/${harvestItem._id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await API.delete(`/harvest/${harvestItem._id}`);
         setHarvest((prev) => prev.filter((h) => h.cropId !== crop._id));
       } else {
-        const res = await API.post("/harvest", { cropId: crop._id, crop: crop.name, status: "In Cart" }, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await API.post("/harvest", { cropId: crop._id, crop: crop.name, status: "In Cart" });
         setHarvest((prev) => [...prev, res.data.harvest]);
       }
     } catch (err) {

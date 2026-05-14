@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import AdminSidebar from "../AdminSidebar";
+// Sidebar provided by AdminLayout
 import API from "../../../api";
 import "../Users/ManageUsers.css";
 
@@ -43,7 +43,6 @@ const ManageAgents = () => {
 
   return (
     <div className="manage-users">
-      <AdminSidebar />
       <div className="content">
         <h2>Manage Agents</h2>
 

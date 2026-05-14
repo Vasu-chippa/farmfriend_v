@@ -1,0 +1,27 @@
+.oc-wrap{
+	min-height:calc(100vh - 80px);
+    padding-left: 400px;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	padding: 24px; /* keep space on small screens */
+}
+.oc-card{background:#fff;border-radius:14px;padding:22px 26px;text-align:left;box-shadow:0 18px 40px rgba(2,20,16,0.08);width:820px;max-width:95%;margin:0 auto}
+.oc-center-card{display:flex;flex-direction:column;gap:18px;align-items:center}
+.oc-success{background:linear-gradient(180deg,#f0fdf6,#e9f9ef);padding:20px;border-radius:12px;margin:0;width:100%;text-align:center}
+.oc-check{width:76px;height:76px;border-radius:50%;background:#dff6e8;color:#137a2a;font-size:36px;display:inline-flex;align-items:center;justify-content:center;margin:0 auto 8px;box-shadow:0 6px 18px rgba(34,120,64,0.08)}
+.oc-sub{margin:6px 0 0;color:#3b5b44}
+.oc-demo{font-size:13px;color:#7a7a7a;margin-top:6px}
+.oc-details{width:100%;margin-bottom:6px}
+.oc-detail{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f2f6f2}
+.oc-detail-label{color:#6b776b;font-size:13px}
+.oc-detail-value{font-weight:700;word-break:break-all}
+.oc-summary{width:100%;margin-top:10px}
+.oc-summary h3{margin:6px 0 8px}
+.oc-qty{font-weight:500;color:#555;margin-left:8px}
+.oc-row{display:flex;justify-content:space-between;padding-top:12px;border-top:1px dashed #eee}
+.oc-actions{display:flex;gap:12px;justify-content:center;margin-top:2px;width:100%}
+.btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,#1f7a1f,#2d9d5a);color:#fff}
+.btn.ghost{background:#f5f5f5}
+.oc-loading{padding:40px;text-align:center}

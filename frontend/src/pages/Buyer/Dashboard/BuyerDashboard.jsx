@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import BuyerSidebar from "../../../components/BuyerSidebar";
+// Sidebar is provided by layout
 //import axios from "axios";
 import API from "../../../api";
 import {
@@ -73,7 +73,6 @@ const BuyerDashboard = () => {
 
   return (
     <div className="buyer-layout">
-      <BuyerSidebar />
       <div className="buyer-dashboard-content">
         <h2>📊 Buyer Dashboard</h2>
 

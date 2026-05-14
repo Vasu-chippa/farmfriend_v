@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import AdminSidebar from "../AdminSidebar";
+// Sidebar provided by AdminLayout
 import API from "../../../api";
 import "./ManageProducts.css";
 
@@ -43,7 +43,6 @@ const ManageProducts = () => {
 
   return (
     <div className="manage-products">
-      <AdminSidebar />
       <div className="content">
         <h2>Manage Products</h2>
 

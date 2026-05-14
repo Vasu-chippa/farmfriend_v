@@ -1,7 +1,9 @@
 // frontend/src/pages/buyer/MyOrders.jsx
 import React, { useEffect, useState } from "react";
 import API from "../../../api";
-import BuyerSidebar from "../../../components/BuyerSidebar";
+import OrderTimeline from "../../../components/Order/OrderTimeline";
+import Button from "../../../components/ui/Button";
+import { FiHash, FiCreditCard, FiPackage } from 'react-icons/fi';
 import "./MyOrders.css";
 
 const MyOrders = () => {
@@ -25,47 +27,12 @@ const MyOrders = () => {
     fetchOrders();
   }, []);
 
-  // Delete Order
-  const handleDelete = async (orderId) => {
-    try {
-      const token = localStorage.getItem("token");
-     await API.delete(`/buyers/orders/${orderId}`, {
-       headers: { Authorization: `Bearer ${token}` },
-     });
-
-      setOrders(orders.filter((o) => o._id !== orderId));
-    } catch (err) {
-      console.error("❌ Error deleting order:", err);
-    }
-  };
-
-  // Update Order Quantity
-  const handleUpdate = async (orderId) => {
-    const newQty = prompt("Enter new quantity (kg):");
-    if (!newQty || isNaN(newQty) || Number(newQty) <= 0) return;
-
-    try {
-      const token = localStorage.getItem("token");
-    const res = await API.put(
-      `/buyers/orders/${orderId}`,
-       { quantity: Number(newQty) },
-       { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-
-      setOrders(
-        orders.map((o) => (o._id === orderId ? { ...o, ...res.data } : o))
-      );
-    } catch (err) {
-      console.error("❌ Error updating order:", err);
-    }
-  };
+  // No edit/delete actions per design — show order identifiers instead
 
   if (loading) return <p className="orders-loading">Loading your orders...</p>;
 
   return (
     <div className="orders-layout">
-      <BuyerSidebar />
       <div className="orders-container">
         <h2 className="orders-title">📦 My Orders</h2>
         {orders.length === 0 ? (
@@ -85,7 +52,7 @@ const MyOrders = () => {
             </thead>
             <tbody>
               {orders.map((order) => (
-                <tr key={order._id}>
+                  <tr key={order._id} className="order-row">
                   <td>
                     {/* <img
   src={
@@ -98,28 +65,16 @@ const MyOrders = () => {
 /> */}
 
                   </td>
-                  <td>{order.product?.name}</td>
-                  <td>{order.quantity}</td>
-                  <td>₹{order.total}</td>
-                  <td>
-                    <span className={`status ${order.status?.toLowerCase()}`}>
-                      {order.status}
-                    </span>
+                  <td className="col-product"><div className="prod-cell"><FiPackage className="prod-icon"/>{order.product?.name}</div></td>
+                  <td className="col-qty">{order.quantity}</td>
+                  <td className="col-total">₹{order.total}</td>
+                  <td className="col-status">
+                    <OrderTimeline status={order.status} />
                   </td>
-                  <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                  <td>
-                    <button
-                      className="btn edit-btn"
-                      onClick={() => handleUpdate(order._id)}
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      className="btn delete-btn"
-                      onClick={() => handleDelete(order._id)}
-                    >
-                      🗑️ Delete
-                    </button>
+                  <td className="col-date">{new Date(order.createdAt).toLocaleDateString()}</td>
+                  <td className="col-ids">
+                    <div className="id-row"><FiHash className="id-icon"/> <span className="id-val">{order._id}</span></div>
+                    <div className="id-row"><FiCreditCard className="id-icon"/> <span className="id-val">{order.payment?.transactionId || '—'}</span></div>
                   </td>
                 </tr>
               ))}

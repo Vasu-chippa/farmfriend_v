@@ -22,38 +22,7 @@ router.post("/login", loginBuyer);
 router.get("/profile", protect, authorizeRoles("buyer"), getBuyerProfile);
 router.put("/profile", protect, authorizeRoles("buyer"), updateBuyerProfile);
 
-// Place order
-router.post("/orders", protect, authorizeRoles("buyer"), async (req, res) => {
-  try {
-    const { productId, quantity } = req.body;
-    const product = await Product.findById(productId);
-    if (!product || product.quantity < quantity) {
-      return res.status(400).json({ error: "Insufficient stock or product not found" });
-    }
 
-    const price = product.price;
-    const total = price * quantity;
-
-    const order = new Order({
-      buyer: req.user._id,
-      product: product._id,
-      quantity,
-      price,
-      total,
-      status: "Pending",
-    });
-
-    await order.save();
-
-    product.quantity -= quantity;
-    await product.save();
-
-    res.status(201).json(order);
-  } catch (err) {
-    console.error("Error placing order:", err);
-    res.status(500).json({ error: "Failed to place order" });
-  }
-});
 
 // Get all orders for buyer
 router.get("/orders", protect, authorizeRoles("buyer"), async (req, res) => {
@@ -67,11 +36,26 @@ router.get("/orders", protect, authorizeRoles("buyer"), async (req, res) => {
   }
 });
 
+// Get single order by id (buyer only)
+router.get("/orders/:id", protect, authorizeRoles("buyer"), async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate("product").populate("buyer", "fullName email");
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    // support both populated `buyer` object and raw ObjectId
+    const buyerId = order.buyer && order.buyer._id ? String(order.buyer._id) : String(order.buyer);
+    if (buyerId !== String(req.user._id)) return res.status(403).json({ error: "Access denied" });
+    res.json(order);
+  } catch (err) {
+    console.error("Error fetching order:", err);
+    res.status(500).json({ error: "Failed to fetch order" });
+  }
+});
+
 // Cancel order
 router.put("/orders/:id/cancel", protect, authorizeRoles("buyer"), async (req, res) => {
   try {
     const order = await Order.findOne({ _id: req.params.id, buyer: req.user._id });
-    if (!order || order.status !== "Pending") {
+    if (!order || order.status !== "Ordered") {
       return res.status(400).json({ error: "Order cannot be cancelled" });
     }
 
@@ -118,7 +102,7 @@ router.put("/orders/:id", protect, authorizeRoles("buyer"), async (req, res) => 
     const order = await Order.findOne({ _id: req.params.id, buyer: req.user._id });
 
     if (!order) return res.status(404).json({ error: "Order not found" });
-    if (order.status !== "Pending") {
+    if (order.status !== "Ordered") {
       return res.status(400).json({ error: "Only pending orders can be updated" });
     }
 
@@ -155,7 +139,7 @@ router.delete("/orders/:id", protect, authorizeRoles("buyer"), async (req, res) 
     const order = await Order.findOne({ _id: req.params.id, buyer: req.user._id });
     if (!order) return res.status(404).json({ error: "Order not found" });
 
-    if (order.status === "Pending") {
+    if (order.status === "Ordered") {
       // restore product stock
       const product = await Product.findById(order.product);
       if (product) {
@@ -193,7 +177,7 @@ router.post("/orders", protect, authorizeRoles("buyer"), async (req, res) => {
       quantity,
       price,
       total,
-      status: "Pending",
+      status: "Ordered",
       approved: false,
       payment: {
         method: paymentMethod || "Other",

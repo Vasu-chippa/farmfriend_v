@@ -65,7 +65,12 @@ export default function AgentDashboard() {
   }, []);
 
   return (
-    <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
+   <motion.div 
+  className="agent-dashboard-container"
+  initial="hidden" 
+  animate="visible" 
+  variants={fadeInUp}
+>
       <div
         style={{
           display: "flex",
