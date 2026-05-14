@@ -4,6 +4,7 @@ import http from "http";
 import { Server as IOServer } from "socket.io";
 import dotenv from "dotenv";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import mongoose from "mongoose";
 import path from "path";
@@ -33,7 +34,16 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+// parse cookies for cookie-based auth
+app.use(cookieParser());
+
+// CORS: allow only the client origin and allow credentials (cookies)
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(morgan("dev"));
 
 // Static folder for uploaded images
@@ -93,7 +103,7 @@ const PORT = Number(process.env.PORT) || 5000;
 // Create HTTP server and Socket.IO
 const httpServer = http.createServer(app);
 const io = new IOServer(httpServer, {
-  cors: { origin: "*" },
+  cors: { origin: process.env.CLIENT_URL || "*", credentials: true },
 });
 
 // In-memory map of userId -> socketId
