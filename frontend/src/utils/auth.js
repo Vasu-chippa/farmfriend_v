@@ -47,7 +47,7 @@ export const isAuthenticated = () => !!cachedUser;
 
 export const getRole = () => cachedUser?.role || null;
 
-export default {
+const auth = {
   fetchCurrentUser,
   logout,
   setAuth,
@@ -56,3 +56,5 @@ export default {
   isAuthenticated,
   getRole,
 };
+
+export default auth;

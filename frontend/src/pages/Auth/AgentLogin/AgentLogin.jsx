@@ -25,13 +25,13 @@ function AgentLogin() {
       // Expect backend response: { message, user, token } or { token, user }
       const { token, user } = res.data;
 
-      if (!res.data || !res.data.token) {
+      if (!res.data || !token) {
         return toast.error("Login failed: invalid response from server");
       }
 
       // Save to localStorage
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.setItem("user", JSON.stringify(user));
 
       toast.success("Login successful!");
       setTimeout(() => navigate("/agent/dashboard"), 1000);

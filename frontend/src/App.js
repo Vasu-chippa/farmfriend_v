@@ -70,7 +70,6 @@ import Reports from "./pages/Admin/Reports/Reports";
 
 function App() {
   const location = useLocation();
-  const isLoggedIn = Boolean(localStorage.getItem("token"));
   // Show navbar only on Home (/) and any login routes (ending with /login)
   const showNavbar = location.pathname === "/" || /\/login$/.test(location.pathname);
 

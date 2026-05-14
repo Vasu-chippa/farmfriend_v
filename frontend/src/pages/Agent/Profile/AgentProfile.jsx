@@ -28,7 +28,7 @@ export default function AgentProfile() {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await API.put("/agents/profile", form);
+      await API.put("/agents/profile", form);
       alert("Profile updated");
       setEditing(false);
       fetchProfile();
