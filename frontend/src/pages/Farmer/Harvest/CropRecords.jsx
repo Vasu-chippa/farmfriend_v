@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   getRecords,
@@ -10,6 +10,8 @@ import API from "../../../api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./CropRecords.css";
+import "./Harvest.css";
+
 
 const CropRecords = () => {
   const { cropId } = useParams();
@@ -21,7 +23,9 @@ const CropRecords = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-
+  const [saving, setSaving] = useState(false);
+  const [editingAcres, setEditingAcres] = useState(false);
+  const [cropAcres, setCropAcres] = useState(0);
   const [formData, setFormData] = useState({
     cropId: cropId || "",
     date: "",
@@ -42,12 +46,14 @@ const CropRecords = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCrop(res.data);
+      setCropAcres(res.data.acres || 0);
     } catch (err) {
       try {
         const res2 = await API.get(`/harvest/${cropId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCrop(res2.data);
+          setCropAcres(res2.data.acres || 0);
       } catch (err2) {
         console.error("Error fetching crop (both endpoints)", err, err2);
         setCrop(null);
@@ -73,6 +79,16 @@ const CropRecords = () => {
     fetchRecords();
   }, [fetchCrop, fetchRecords]);
 
+  const summary = useMemo(() => {
+    const totalCost = records.reduce((s, r) => s + Number(r.cost || 0), 0);
+    const totalQuantity = records.reduce((s, r) => s + Number(r.quantity || 0), 0);
+    const totalAcres = records.reduce((s, r) => s + Number(r.acres || 0), 0);
+    const numRecords = records.length;
+    const latestDate = records.length ? new Date(records[0].date) : null;
+    const earliestDate = records.length ? new Date(records[records.length - 1].date) : null;
+    return { totalCost, totalQuantity, totalAcres, numRecords, latestDate, earliestDate };
+  }, [records]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((f) => ({ ...f, [name]: value }));
@@ -85,19 +101,23 @@ const CropRecords = () => {
       return;
     }
 
+    if (saving) return; // prevent duplicate submissions
+    setSaving(true);
     try {
       if (editingRecord) {
-        const updated = await updateRecord(editingRecord._id, {
-          ...formData,
-          cropId,
-        });
+        const payload = { ...formData, cropId };
+        // remove acres from record payload (acres is managed separately)
+        if (payload.acres !== undefined) delete payload.acres;
+        const updated = await updateRecord(editingRecord._id, payload);
         setRecords((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
-        toast.success("Record updated");
+        toast.success("Record updated", { toastId: 'record-updated' });
         setEditingRecord(null);
       } else {
-        const created = await addRecord({ ...formData, cropId });
+        const payload = { ...formData, cropId };
+        if (payload.acres !== undefined) delete payload.acres;
+        const created = await addRecord(payload);
         setRecords((prev) => [created, ...prev]);
-        toast.success("Record saved");
+        toast.success("Record saved", { toastId: 'record-saved' });
       }
       setShowForm(false);
       setShowAdvanced(false);
@@ -115,7 +135,9 @@ const CropRecords = () => {
     } catch (err) {
       console.error("Save record error:", err);
       const msg = err?.response?.data?.error || "Failed to save record";
-      toast.error(msg);
+      toast.error(msg, { toastId: 'record-save-error' });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -147,12 +169,7 @@ const CropRecords = () => {
       toast.error("Failed to delete record");
     }
   };
-//   const getImageUrl = (img) => {
-//   if (!img) return "/cropimages/default.jpeg";
-//   return img.startsWith("http")
-//     ? img
-//     : `http://localhost:5000/uploads/${img}`;
-// };
+
   return (
     <div className="crop-records-page">
       <div className="left-panel">
@@ -162,22 +179,19 @@ const CropRecords = () => {
 
         {crop ? (
           <div className="crop-card">
-         <img
-  src={
-    crop?.image
-      ? `${process.env.PUBLIC_URL}/cropimages/${crop.image}`
-      : `${process.env.PUBLIC_URL}/cropimages/default.jpeg`
-  }
-  alt={crop?.name || "crop"}
-  className="crop-image"
-  onError={(e) => {
-    e.target.onerror = null;
-    e.target.src = `${process.env.PUBLIC_URL}/cropimages/default.jpeg`;
-  }}
-/>
-
-
-
+            <img
+              src={
+                crop?.image
+                  ? `${process.env.PUBLIC_URL}/cropimages/${crop.image}`
+                  : `${process.env.PUBLIC_URL}/cropimages/default.jpeg`
+              }
+              alt={crop?.name || "crop"}
+              className="crop-image"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = `${process.env.PUBLIC_URL}/cropimages/default.jpeg`;
+              }}
+            />
 
             <div className="crop-info">
               <h2>🌱 {crop.name}</h2>
@@ -192,6 +206,67 @@ const CropRecords = () => {
         ) : (
           <p>Loading crop...</p>
         )}
+        {/* Summary / Started details box */}
+        <div className="crop-stats">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3>📊 Started Details</h3>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {!editingAcres ? (
+              <div style={{ fontSize: 14, color: '#333' }}>Acres: <strong>{cropAcres || '-'}</strong></div>
+            ) : (
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input type="number" value={cropAcres} onChange={(e) => setCropAcres(e.target.value)} style={{ width: 100, padding: '6px 8px', borderRadius: 6 }} />
+                <button className="save-btn" onClick={async () => {
+                  try {
+                    await API.put(`/crops/${cropId}`, { acres: Number(cropAcres) }, { headers: { Authorization: `Bearer ${token}` } });
+                    toast.success('Acres updated', { toastId: 'acres-updated' });
+                    // refresh crop and records
+                    await fetchCrop();
+                    setEditingAcres(false);
+                    window.dispatchEvent(new Event('harvestUpdated'));
+                  } catch (err) {
+                    console.error('Failed to update acres', err);
+                    toast.error('Failed to update acres');
+                  }
+                }}>Save</button>
+                <button className="icon-btn delete" onClick={() => { setEditingAcres(false); setCropAcres(crop?.acres || 0); }}>✖</button>
+              </div>
+            )}
+            {!editingAcres && (<button className="add-btn" onClick={() => setEditingAcres(true)}>Edit Acres</button>)}
+          </div>
+          </div>
+          <div className="stats-grid">
+            <div className="stat-item">
+              <div className="label">Started</div>
+              <div className="value">{summary.earliestDate ? summary.earliestDate.toLocaleDateString() : (crop?.dateAdded ? new Date(crop.dateAdded).toLocaleDateString() : '—')}</div>
+            </div>
+
+            <div className="stat-item">
+              <div className="label">Money Spent</div>
+              <div className="value">₹{summary.totalCost}</div>
+            </div>
+
+            <div className="stat-item">
+              <div className="label">Latest Record</div>
+              <div className="value">{summary.latestDate ? summary.latestDate.toLocaleDateString() : '—'}</div>
+            </div>
+
+            <div className="stat-item">
+              <div className="label">Total Quantity</div>
+              <div className="value">{summary.totalQuantity} kg</div>
+            </div>
+
+            {/* <div className="stat-item">
+              <div className="label">Acres (sum)</div>
+              <div className="value">{summary.totalAcres || '-'}</div>
+            </div> */}
+
+            <div className="stat-item">
+              <div className="label">Records</div>
+              <div className="value">{summary.numRecords}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="right-panel">
@@ -266,6 +341,7 @@ const CropRecords = () => {
                     <th>Date</th>
                     <th>Cost (₹)</th>
                     <th>Quantity (kg)</th>
+                    <th>Acres</th>
                     <th>Description</th>
                     <th>Seeds</th>
                     <th>Workers</th>
@@ -280,6 +356,7 @@ const CropRecords = () => {
                       <td>{new Date(r.date).toLocaleDateString()}</td>
                       <td>{r.cost}</td>
                       <td>{r.quantity}</td>
+                      <td>{r.acres ?? '-'}</td>
                       <td className="desc-cell">{r.description}</td>
                       <td>{r.seeds ?? "-"}</td>
                       <td>{r.workers ?? "-"}</td>

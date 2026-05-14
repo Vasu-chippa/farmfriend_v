@@ -1,0 +1,6 @@
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:10px;border:1px solid transparent;font-weight:600;cursor:pointer;transition:all .18s ease;font-family:inherit}
+.primary{background:linear-gradient(180deg,var(--ff-primary),var(--ff-primary-600));color:white}
+.ghost{background:transparent;color:var(--ff-primary);border-color:transparent}
+.spinner{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.25);border-top-color:rgba(255,255,255,0.9);animation:spin .8s linear infinite}
+
+@keyframes spin{to{transform:rotate(360deg)}}

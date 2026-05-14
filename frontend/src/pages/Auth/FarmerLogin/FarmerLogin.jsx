@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../../../services/authService";
+import { toast } from "react-toastify";
+import API from "../../../api";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import wave from "../wave.png";
 import bg from "../bg.svg";
@@ -15,17 +16,19 @@ function FarmerLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { user } = await login({ email, password });
-      alert(`✅ Welcome back, ${user.fullName}!`);
-
-      if (user.role === "farmer") navigate("/farmer/dashboard");
-      else if (user.role === "buyer") navigate("/buyer/dashboard");
-      else if (user.role === "agent") navigate("/agent/dashboard");
-      else if (user.role === "admin") navigate("/admin/dashboard");
-      else navigate("/");
+      const res = await API.post("/auth/login", { email, password });
+      const { user } = res.data;
+      toast.success(`Welcome back, ${user.fullName}!`);
+      setTimeout(() => {
+        if (user.role === "farmer") navigate("/farmer/dashboard");
+        else if (user.role === "buyer") navigate("/buyer/dashboard");
+        else if (user.role === "agent") navigate("/agent/dashboard");
+        else if (user.role === "admin") navigate("/admin/dashboard");
+        else navigate("/");
+      }, 1000);
     } catch (err) {
       console.error("Login Error:", err.response?.data || err.message);
-      alert("❌ Login failed: " + (err.response?.data?.message || "Unknown error"));
+      toast.error("Login failed: " + (err.response?.data?.message || "Unknown error"));
     }
   };
 

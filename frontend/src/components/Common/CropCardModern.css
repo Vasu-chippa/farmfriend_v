@@ -1,0 +1,25 @@
+.ccm-card{ background:#fff;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;min-height:420px;box-shadow:0 10px 30px rgba(20,80,30,0.04);transition:transform .18s ease,box-shadow .18s ease }
+.ccm-image-wrap{ position:relative;height:160px;overflow:hidden }
+.ccm-image{ width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s cubic-bezier(.2,.9,.3,1) }
+.ccm-card:hover{ transform:translateY(-6px) scale(1.02); box-shadow:0 22px 48px rgba(10,80,30,0.08) }
+.ccm-card:hover .ccm-image{ transform:scale(1.06) }
+.ccm-badge{ position:absolute;right:12px;top:12px;background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;padding:6px 12px;border-radius:14px;font-weight:800;font-size:12px;box-shadow:0 8px 24px rgba(39,174,96,0.12) }
+.ccm-body{ padding:16px;display:flex;flex-direction:column;gap:12px }
+.ccm-row{ display:flex;align-items:center;justify-content:space-between;gap:12px }
+.ccm-title{ font-size:20px;font-weight:800;color:#143a2b }
+.ccm-price{ color:#1b7a3a;font-weight:900 }
+.ccm-unit{ font-weight:600;color:#6b6b6b;font-size:12px }
+.ccm-desc{ color:#5a6b62;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+.ccm-grid{ display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:6px }
+.ccm-info{ background:#f6faf6;padding:10px;border-radius:12px;display:flex;flex-direction:column;gap:6px;min-height:62px }
+.ii-icon{ color:#27ae60;font-size:18px }
+.ii-label{ font-size:12px;color:#6b7b6f }
+.ii-value{ font-weight:800;color:#163f2e }
+.ccm-add{ margin-top:8px;border:none;padding:12px;border-radius:12px;background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 10px 20px rgba(39,174,96,0.12);font-size:15px }
+.ccm-add:hover{ box-shadow:0 18px 40px rgba(39,174,96,0.18); transform:translateY(-3px) }
+.ccm-add.adding{ transform:scale(0.98);opacity:0.9 }
+.btn-icon{ font-size:16px }
+
+/* responsive sizing */
+@media (min-width: 1024px){ .ccm-card{ min-height:420px } }
+@media (max-width: 768px){ .ccm-card{ min-height:420px } }

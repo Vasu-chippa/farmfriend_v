@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import API from "../../../api";
 import { useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+import { toast } from "react-toastify";
 import wave from "../wave.png";
 import bg from "../bg.svg";
 import avatar from "../avatar.svg";
@@ -18,13 +19,14 @@ function BuyerLogin() {
       const res = await API.post("/buyers/login", { email, password });
 
       const { token, user } = res.data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      alert("✅ Login successful");
-      navigate("/buyer/dashboard");
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      
+      toast.success("Login successful");
+      setTimeout(() => navigate("/buyer/dashboard"), 1000);
     } catch (err) {
-      console.error("Buyer login error:", err);
-      alert("❌ Login failed: " + (err.response?.data?.message || err.message));
+      console.error(err);
+      toast.error("Login failed: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -68,7 +70,7 @@ function BuyerLogin() {
                   <button
                     type="button"
                     className="link-btn"
-                    onClick={() => alert("Password reset flow coming soon!")}
+                    onClick={() => toast.info("Password reset flow coming soon!")}
                   >
                     Forgot Password?
                   </button>

@@ -10,7 +10,25 @@ export const getHarvest = async (req, res) => {
 
     if (!harvest) return res.json({ crops: [] });
 
-    res.json({ crops: harvest.crops });
+    // Normalize image paths for frontend consumers
+    const normalized = harvest.crops.map((c) => {
+      const cropObj = c.toObject ? c.toObject() : c;
+      const ci = cropObj.cropId || {};
+      let img = ci.image;
+      if (img && typeof img === 'string') {
+        if (img.startsWith('http') || img.startsWith('/')) {
+          // keep as-is
+        } else {
+          img = `/cropimages/${img}`;
+        }
+      } else {
+        img = `/cropimages/default.jpeg`;
+      }
+      cropObj.cropId = { ...ci, image: img };
+      return cropObj;
+    });
+
+    res.json({ crops: normalized });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -31,12 +49,36 @@ export const addCrop = async (req, res) => {
       return res.status(400).json({ msg: "Crop already in harvest list" });
     }
 
-    harvest.crops.push({ cropId, name, price, quantity, image, category, quality });
+    // normalize image before saving: store filename or path without host
+    let img = image;
+    if (img && typeof img === 'string' && !img.startsWith('http') && !img.startsWith('/')) {
+      img = `/cropimages/${img}`;
+    }
+
+    harvest.crops.push({ cropId, name, price, quantity, image: img, category, quality });
     await harvest.save();
 
     await harvest.populate("crops.cropId", "name image price quantity isOrganic quality category");
 
-    res.json({ msg: "Crop added", crops: harvest.crops });
+    // normalize images in response
+    const normalized = harvest.crops.map((c) => {
+      const cropObj = c.toObject ? c.toObject() : c;
+      const ci = cropObj.cropId || {};
+      let img2 = ci.image;
+      if (img2 && typeof img2 === 'string') {
+        if (img2.startsWith('http') || img2.startsWith('/')) {
+          // keep
+        } else {
+          img2 = `/cropimages/${img2}`;
+        }
+      } else {
+        img2 = `/cropimages/default.jpeg`;
+      }
+      cropObj.cropId = { ...ci, image: img2 };
+      return cropObj;
+    });
+
+    res.json({ msg: "Crop added", crops: normalized });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -54,7 +96,23 @@ export const removeCrop = async (req, res) => {
 
     await harvest.populate("crops.cropId", "name image price quantity isOrganic quality category");
 
-    res.json({ msg: "Crop removed", crops: harvest.crops });
+    const normalized = harvest.crops.map((c) => {
+      const cropObj = c.toObject ? c.toObject() : c;
+      const ci = cropObj.cropId || {};
+      let img = ci.image;
+      if (img && typeof img === 'string') {
+        if (img.startsWith('http') || img.startsWith('/')) {
+        } else {
+          img = `/cropimages/${img}`;
+        }
+      } else {
+        img = `/cropimages/default.jpeg`;
+      }
+      cropObj.cropId = { ...ci, image: img };
+      return cropObj;
+    });
+
+    res.json({ msg: "Crop removed", crops: normalized });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

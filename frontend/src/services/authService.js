@@ -1,44 +1,41 @@
 // File: frontend/src/services/authService.js
 import axios from "axios";
-const API_URL = "https://farmfriend.onrender.com/api/auth";
+
+// Use environment-provided base URL in production, or default to relative
+// '/api' for development (frontend proxy). This prevents hardcoding the
+// production Render URL which causes local development to hit the remote
+// server and can lead to "server error" when developing locally.
+const API_BASE = process.env.REACT_APP_API_BASE_URL || "/api";
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: `${API_BASE}/auth`,
+  withCredentials: true,
 });
-// Attach token automatically
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 // ===== Auth Functions =====
 export const register = async (data) => {
   const res = await api.post("/register", data);
-  if (res.data.token) {
-    localStorage.setItem("token", res.data.token);
-    localStorage.setItem("user", JSON.stringify(res.data.user));
-  }
+  // server sets cookie; response includes user
   return res.data;
 };
 export const login = async (data) => {
   const res = await api.post("/login", data);
-  if (res.data.token) {
-    localStorage.setItem("token", res.data.token);
-    localStorage.setItem("user", JSON.stringify(res.data.user));
-  }
+  // server sets cookie; response includes user
   return res.data;
 };
-export const getCurrentUser = () => {
-  const user = localStorage.getItem("user");
-  return user ? JSON.parse(user) : null;
+export const getCurrentUser = async () => {
+  try {
+    const res = await api.get("/me");
+    return res.data.user || null;
+  } catch (err) {
+    return null;
+  }
 };
-export const logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+export const logout = async () => {
+  try {
+    await api.post("/logout");
+    return true;
+  } catch (err) {
+    return false;
+  }
 };
 const authService = {
   register,

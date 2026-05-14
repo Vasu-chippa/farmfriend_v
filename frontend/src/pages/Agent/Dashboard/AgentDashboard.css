@@ -1,5 +1,10 @@
 /* apps/frontend/src/pages/Agent/Dashboard/AgentDashboard.css */
-
+.agent-dashboard-container {
+  margin-left: 200px; /* match sidebar width */
+  padding: 20px 24px;
+  min-height: 100vh;
+  background: #f6f9fc;
+}
 /* Enhancements for KPI cards */
 .kpi:hover {
   transform: translateY(-2px); /* Slight lift on hover */
@@ -57,3 +62,11 @@
   font-weight: 600;
   color: #9ca3af;
 }
+@media (max-width: 768px) {
+  .agent-dashboard-container {
+    margin-left: 0;
+    padding: 16px;
+  }
+}
+
+

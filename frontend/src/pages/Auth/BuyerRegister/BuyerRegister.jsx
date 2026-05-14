@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import API from "../../../api";
+import { useNavigate } from "react-router-dom";
 import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
+import { toast } from "react-toastify";
+import API from "../../../api";
 import wave from "../wave.png";
 import bg from "../bg.svg";
 import avatar from "../avatar.svg";
@@ -10,14 +12,16 @@ function BuyerRegister() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await API.post("/buyers/register", { fullName, email, password });
-      alert("✅ Buyer registered successfully");
+      toast.success("Buyer registered successfully");
+      setTimeout(() => navigate("/buyer/login"), 1000);
     } catch (err) {
-      alert("❌ Registration failed");
+      toast.error("Registration failed: " + (err.response?.data?.message || err.message));
     }
   };
 

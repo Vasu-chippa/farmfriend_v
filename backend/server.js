@@ -1,5 +1,7 @@
 // apps/backend/server.js
 import express from "express";
+import http from "http";
+import { Server as IOServer } from "socket.io";
 import dotenv from "dotenv";
 import cors from "cors";
 import morgan from "morgan";
@@ -18,6 +20,10 @@ import cropRecordRoutes from "./src/routes/cropRecordRoutes.js";
 import cropRoutes from "./src/routes/cropRoutes.js";
 import orderRoutes from "./src/routes/orderRoutes.js";
 import productRoutes from "./src/routes/productRoutes.js";
+import reviewRoutes from "./src/routes/reviewRoutes.js";
+import ledgerRoutes from "./src/routes/ledgerRoutes.js";
+import notificationRoutes from "./src/routes/notificationRoutes.js";
+import dashboardRoutes from "./src/routes/dashboard.js";
 
 // Load environment variables
 dotenv.config();
@@ -51,6 +57,10 @@ app.use("/api/crops", cropRoutes);
 app.use("/api/harvest", harvestRoutes);
 app.use("/api/crop-records", cropRecordRoutes);
 app.use("/api/marketplace", productRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/ledger", ledgerRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Database connection
 const connectDB = async () => {
@@ -80,7 +90,42 @@ connectDB();
 
 // Server listening
 const PORT = Number(process.env.PORT) || 5000;
-const server = app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Create HTTP server and Socket.IO
+const httpServer = http.createServer(app);
+const io = new IOServer(httpServer, {
+  cors: { origin: "*" },
+});
+
+// In-memory map of userId -> socketId
+const onlineUsers = new Map();
+
+io.on("connection", (socket) => {
+  console.log("Socket connected:", socket.id);
+
+  socket.on("register", (userId) => {
+    if (userId) {
+      onlineUsers.set(userId, socket.id);
+      console.log("Registered user", userId, "->", socket.id);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    // remove from onlineUsers
+    for (const [uid, sid] of onlineUsers.entries()) {
+      if (sid === socket.id) {
+        onlineUsers.delete(uid);
+        break;
+      }
+    }
+    console.log("Socket disconnected:", socket.id);
+  });
+});
+
+// Make io and onlineUsers available to routes via app.locals
+app.locals.io = io;
+app.locals.onlineUsers = onlineUsers;
+
+const server = httpServer.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
 server.on("error", (err) => {
   if (err && err.code === "EADDRINUSE") {

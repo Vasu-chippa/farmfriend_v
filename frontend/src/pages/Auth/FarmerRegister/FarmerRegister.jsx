@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { register } from "../../../services/authService";
 import { FaUser, FaEnvelope, FaLock, FaLeaf } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import wave from "../wave.png";
 import bg from "../bg.svg";
 import avatar from "../avatar.svg";
@@ -11,6 +13,7 @@ function FarmerRegister() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [landSize, setLandSize] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,11 +25,11 @@ function FarmerRegister() {
         landSize,
         role: "farmer",
       });
-      alert(`✅ Farmer registered successfully: ${user.fullName}`);
-      window.location.href = "/farmer/login";
+      toast.success(`✅ Farmer registered successfully: ${user.fullName}`);
+      setTimeout(() => navigate("/farmer/login"), 1000);
     } catch (err) {
       console.error("Registration Error:", err.response?.data || err.message);
-      alert("❌ Registration failed: " + (err.response?.data?.message || "Unknown error"));
+      toast.error("❌ Registration failed: " + (err.response?.data?.message || "Unknown error"));
     }
   };
 

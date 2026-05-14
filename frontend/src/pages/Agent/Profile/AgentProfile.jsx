@@ -32,10 +32,7 @@ export default function AgentProfile() {
       alert("Profile updated");
       setEditing(false);
       fetchProfile();
-      // update localStorage user
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const newUser = { ...user, ...data.user };
-      localStorage.setItem("user", JSON.stringify(newUser));
+      // server holds latest user data; UI will re-fetch
     } catch (err) {
       console.error("update profile", err);
       alert("Failed to update profile");

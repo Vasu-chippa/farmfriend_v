@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import AdminSidebar from "../AdminSidebar";
 import API from "../../../api";
 import "./ManagePayments.css";
 
@@ -29,7 +28,6 @@ const ManagePayments = () => {
 
   return (
     <div className="manage-payments">
-      <AdminSidebar />
       <div className="content">
         <h2>Manage Payments</h2>
         <table className="payments-table">

@@ -1,8 +1,14 @@
 /* apps/frontend/src/pages/Agent/Farmers/FarmersPage.css */
-
+.agent-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f9fafb;
+  padding-left: 50px;
+}
 /* Enhance the form layout */
 .agent-main form.panel {
   max-width: 800px;
+  padding-left: 400px;
 }
 
 /* Style for the button inside the table cell (Action) */

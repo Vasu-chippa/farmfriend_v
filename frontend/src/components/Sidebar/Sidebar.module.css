@@ -1,0 +1,105 @@
+.sidebar{
+  background-color: blueviolet;
+  position:fixed;
+  left:18px;
+  top:18px;
+  bottom:18px;
+  font-style: bold;
+  width:300px;
+  max-width:calc(100% - 36px);
+  box-sizing:border-box;
+  z-index:1000; /* ensure it sits above header/content */
+  /* give the sidebar container a subtle rounded frame and purple inner glow */
+  border-radius:18px;
+  padding:6px;
+  box-shadow: 0 12px 40px rgba(74,0,170,0.12), 0 0 30px rgba(138,43,226,0.06) inset;
+}
+
+/* collapsed state when `.open` is false on the container */
+.sidebar:not(.open){width:92px}
+.sidebar:not(.open) .brand, .sidebar:not(.open) .profileInfo, .sidebar:not(.open) .label, .sidebar:not(.open) .muted{display:none}
+.sidebar:not(.open) .avatar{width:44px;height:44px;font-size:16px}
+
+.open{}
+
+.floatingCard{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding:18px;
+  border-radius:14px;
+  /* translucent card that complements the blueviolet sidebar */
+  background: linear-gradient(180deg, rgba(38, 216, 118, 0.94), rgba(136, 95, 177, 0.9));
+  /* backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%); */
+  box-shadow: 0 18px 48px rgba(38,0,60,0.20), 0 0 36px rgba(106,13,173,0.06) inset;
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow:auto;
+  animation: floatIn 700ms ease both;
+}
+
+.headerRow{display:flex;align-items:center;gap:12px}
+.brand{font-weight:800;color:#fff8ff;font-size:1.05rem;letter-spacing:0.2px}
+.toggle{background:rgba(255,255,255,0.03);border:none;cursor:pointer;font-size:18px;padding:8px;border-radius:10px;color:rgba(255,255,255,0.9);backdrop-filter:blur(4px)}
+.toggle:hover{transform:scale(1.03)}
+.themeBtn{background:transparent;border:none;color:rgba(255,255,255,0.9);padding:8px;border-radius:8px;cursor:pointer}
+.themeBtn:hover{color:#fff}
+
+.profile{display:flex;align-items:center;gap:12px;padding:6px 4px;border-radius:12px}
+.avatar{position:relative;display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;font-weight:700;color:#2b0036;background:linear-gradient(180deg,#ffdfff,#f0d6ff);box-shadow:0 8px 22px rgba(106,13,173,0.14),0 0 18px rgba(138,43,226,0.06);font-size:20px}
+.avatarGlow{position:absolute;inset:0;border-radius:50%;box-shadow:0 8px 36px rgba(138,43,226,0.16);opacity:0.95;filter:blur(10px);pointer-events:none}
+.avatar::after{content:'';position:absolute;right:-8px;bottom:-8px;width:10px;height:10px;border-radius:50%;background:rgba(138,43,226,0.9);box-shadow:0 0 10px rgba(138,43,226,0.6)}
+.profileInfo{display:flex;flex-direction:column}
+.name{font-weight:700;color:#fffafc}
+.role{font-size:0.85rem;color:rgba(255,250,255,0.85)}
+
+.nav{display:flex;flex-direction:column;gap:8px;margin-top:6px;padding-bottom:12px}
+.item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;color:rgba(255,250,255,0.95);text-decoration:none;transition:transform .25s ease,box-shadow .25s ease,background .25s ease,opacity .25s ease}
+.item:hover{transform:scale(1.03);background:linear-gradient(90deg, rgba(138,43,226,0.12), rgba(106,13,173,0.06));box-shadow:0 8px 24px rgba(106,13,173,0.06),0 0 18px rgba(138,43,226,0.08)}
+.item .icon{font-size:18px;color:rgba(255,250,255,0.95);display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.00))}
+.item .label{font-weight:600}
+
+.active{background:linear-gradient(90deg,#6a0dad 0%, #8a2be2 100%);color:#2afd00;box-shadow:0 10px 34px rgba(106,13,173,0.18),inset 0 0 30px rgba(255,255,255,0.02);transform:scale(1.02);position:relative}
+.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:4px;border-radius:6px;background:linear-gradient(180deg,#dab1ff,#6a0dad);box-shadow:0 0 18px rgba(138,43,226,0.6)}
+
+.footer{ /* sits above logout */ padding-top:132px; color: #000000; }
+.muted{display:block;color:#181717;font-size:0.99rem; font-weight: bold;   background:rgba(0,0,0,0.06);padding:8px 12px;border-radius:8px;text-align:center;margin:0 6px 10px 6px}
+
+.sidebarFooterActions{padding:8px 6px;display:flex;justify-content:center;margin-top:auto}
+.logoutBtn{display:flex; font-weight: bold; color: #000000;   align-items:center;gap:10px;border:none;background:linear-gradient(135deg,#ff6b6b,#ff9a9a);color:#000000;padding:10px;border-radius:10px;cursor:pointer;width:100%;justify-content:flex-start}
+.logoutBtn:hover{filter:brightness(0.95);transform:translateY(-1px)}
+
+/* responsive behaviour: collapse to icons only on smaller widths */
+@media (max-width: 980px) {
+  .floatingCard{padding:14px}
+  .sidebar{width:80px;left:12px}
+  .brand,.profileInfo,.label,.muted{display:none}
+  .avatar{width:44px;height:44px;font-size:16px}
+  .item{padding:10px;border-radius:10px}
+  .active{transform:none}
+}
+
+@media (max-width: 768px){
+  .sidebar{position:fixed;left:12px;top:12px;bottom:auto;width:72px;height:auto}
+  .floatingCard{height:auto;max-height:80vh}
+}
+
+/* subtle float animation */
+@keyframes subtleFloat{0%{transform:translateY(0px)}50%{transform:translateY(-4px)}100%{transform:translateY(0px)}}
+@keyframes floatIn{from{opacity:0;transform:translateY(-6px) scale(.996)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* scrollbar styling inside sidebar */
+.floatingCard::-webkit-scrollbar{width:10px}
+.floatingCard::-webkit-scrollbar-track{background:transparent}
+.floatingCard::-webkit-scrollbar-thumb{background:linear-gradient(180deg,rgba(138,43,226,0.18),rgba(106,13,173,0.12));border-radius:10px}
+
+/* divider */
+.divider{height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));margin:6px 0;border-radius:2px}
+
+/* Footer actions (logout) */
+.sidebarFooterActions{padding:8px 6px;display:flex;justify-content:center}
+.logoutBtn{display:flex;align-items:center;gap:10px;border:none;background:linear-gradient(135deg,#ff6b6b,#ff9a9a);color:#fff;padding:10px;border-radius:10px;cursor:pointer;width:100%;justify-content:flex-start}
+.logoutBtn:hover{filter:brightness(0.95);transform:translateY(-1px)}
+.logoutBtn .icon{font-size:18px}
+

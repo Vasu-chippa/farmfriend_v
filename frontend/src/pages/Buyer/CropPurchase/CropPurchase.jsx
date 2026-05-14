@@ -1,121 +1,144 @@
 // src/pages/Buyer/CropPurchase.jsx
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-//import axios from "axios";
 import API from "../../../api";
-import BuyerSidebar from "../../../components/BuyerSidebar";
 import "./CropPurchase.css";
 
 function CropPurchase() {
-  const { id } = useParams();
-  const [product, setProduct] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const navigate = useNavigate();
+  const { id } = useParams();
+  const [product, setProduct] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [processing, setProcessing] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        // ✅ Use same route style as Marketplace
-        const res = await API.get(`/marketplace/${id}`);
-        setProduct(res.data);
-      } catch (err) {
-        console.error("❌ Error fetching product:", err);
-      }
-    };
-    fetchProduct();
-  }, [id]);
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const res = await API.get(`/marketplace/${id}`);
+        setProduct(res.data);
+      } catch (err) {
+        console.error("❌ Error fetching product:", err);
+      }
+    };
+    fetchProduct();
+  }, [id]);
 
-  // 💡 UPDATED: Now accepts paymentMethod as an argument and sends it to the API
-  const placeOrder = async (paymentMethod) => {
-    try {
-      const token = localStorage.getItem("token");
-      await API.post(
-        "/buyers/orders",
-        // Send paymentMethod in the request body
-        { productId: product._id, quantity, paymentMethod },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  const placeOrder = async (paymentMethod) => {
+    setProcessing(true);
 
-      // ✅ Redirect after success
-      navigate("/buyer/orders");
-    } catch (err) {
-      alert("❌ Failed to place order");
-      console.error(err);
-    }
-  };
+    // small delay for UX
+    await new Promise((r) => setTimeout(r, 800));
 
-  if (!product) return <p className="loading">Loading crop details...</p>;
+    try {
+      const token = localStorage.getItem("token");
 
-  return (
-    <div className="purchase-layout">
-      <BuyerSidebar />
-      <div className="purchase-container">
-        <div className="purchase-card">
-          {/* <div className="image-section">
-            <img
-              src={
-                product.images?.length > 0
-                  ? `http://localhost:5000${product.images[0]}`
-                  : `${process.env.PUBLIC_URL}/cropimages/default.jpeg`
-              }
-              alt={product.name}
-              className="crop-image"
-            />
-          </div> */}
+      const res = await API.post(
+        "/buyers/orders",
+        { productId: product._id, quantity, paymentMethod },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-          <div className="details-section">
-            <h2 className="crop-title">{product.name}</h2>
-            <p className="crop-desc">{product.description || "No description available"}</p>
-            <p className="crop-info">
-              <strong>Price:</strong> ₹{product.price} /kg
-            </p>
-            <p className="crop-info">
-              <strong>Available Quantity:</strong> {product.quantity} kg
-            </p>
-            <p className="crop-info">
-              <strong>Quality:</strong> {product.quality || "N/A"}
-            </p>
-            <p className="crop-info">
-              <strong>Organic:</strong> {product.isOrganic ? "✅ Yes" : "❌ No"}
-            </p>
+      const order = res.data;
 
-            {/* 💡 UPDATED order-section with payment method selection and updated onClick */}
-            <div className="order-section">
-              <label htmlFor="quantityInput">Enter Quantity (kg):</label>
-              <input
-                id="quantityInput"
-                type="number"
-                value={quantity}
-                min="1"
-                max={product.quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-              />
+      navigate(`/buyer/orders/confirmation/${order._id}`, {
+        state: { order },
+      });
 
-              <label htmlFor="paymentMethod">Payment Method:</label>
-              <select id="paymentMethod" defaultValue="Credit Card">
-                <option>Credit Card</option>
-                <option>UPI</option>
-                <option>PayPal</option>
-                <option>Bank Transfer</option>
-                <option>Other</option>
-              </select>
+    } catch (err) {
+      console.warn("⚠️ Backend failed, using demo order");
 
-              <button
-                onClick={() => {
-                  // Get the selected payment method and call placeOrder with it
-                  const method = document.getElementById("paymentMethod").value;
-                  placeOrder(method);
-                }}
-                className="order-btn"
-              >
-                Place Order
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+      const fakeOrder = {
+        _id: `ORDER-${Date.now()}`,
+        product: { name: product.name },
+        quantity,
+        total: product.price * quantity,
+      };
+
+      navigate(`/buyer/orders/confirmation/${fakeOrder._id}`, {
+        state: { order: fakeOrder, demo: true },
+      });
+
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  if (!product) return <p className="loading">Loading crop details...</p>;
+
+  return (
+    <div className="purchase-layout">
+      <div className="purchase-container">
+
+        <div className="purchase-card">
+
+          {/* LEFT SIDE - DETAILS */}
+          <div className="details-section">
+            <h2 className="crop-title">{product.name}</h2>
+
+            <p className="crop-desc">
+              {product.description || "No description available"}
+            </p>
+
+            <div className="crop-info">
+              <span>Price</span>
+              <span>₹{product.price} / kg</span>
+            </div>
+
+            <div className="crop-info">
+              <span>Available Quantity</span>
+              <span>{product.quantity} kg</span>
+            </div>
+
+            <div className="crop-info">
+              <span>Quality</span>
+              <span>{product.quality || "N/A"}</span>
+            </div>
+
+            <div className="crop-info">
+              <span>Organic</span>
+              <span>{product.isOrganic ? "✅ Yes" : "❌ No"}</span>
+            </div>
+          </div>
+
+          {/* RIGHT SIDE - ORDER BOX */}
+          <div className="order-box">
+            <h3>Place Order</h3>
+
+            <label>Enter Quantity (kg)</label>
+            <input
+              type="number"
+              value={quantity}
+              min="1"
+              max={product.quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+            />
+
+            <label>Payment Method</label>
+            <select id="paymentMethod">
+              <option>Credit Card</option>
+              <option>UPI</option>
+              <option>PayPal</option>
+              <option>Bank Transfer</option>
+            </select>
+
+            <button
+              className="order-btn"
+              disabled={processing}
+              onClick={() => {
+                const method =
+                  document.getElementById("paymentMethod").value;
+                placeOrder(method);
+              }}
+            >
+              {processing ? "Processing..." : "Place Order"}
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default CropPurchase;

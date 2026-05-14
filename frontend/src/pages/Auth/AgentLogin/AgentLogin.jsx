@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import API from "../../../api";
 import { useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+import { toast } from "react-toastify";
 import wave from "../wave.png";
 import bg from "../bg.svg";
 import avatar from "../avatar.svg";
@@ -24,20 +25,19 @@ function AgentLogin() {
       // Expect backend response: { message, user, token } or { token, user }
       const { token, user } = res.data;
 
-      if (!token || !user) {
-        console.error("Agent login response missing token/user:", res.data);
-        return alert("Login failed: invalid response from server");
+      if (!res.data || !res.data.token) {
+        return toast.error("Login failed: invalid response from server");
       }
 
       // Save to localStorage
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      // navigate to agent dashboard
-      navigate("/agent/dashboard");
+      toast.success("Login successful!");
+      setTimeout(() => navigate("/agent/dashboard"), 1000);
     } catch (err) {
       console.error("Agent Login Error:", err.response?.data || err.message);
-      alert("Login failed: " + (err.response?.data?.message || err.message));
+      toast.error("Login failed: " + (err.response?.data?.message || err.message));
     }
   };
   return (

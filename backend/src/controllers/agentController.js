@@ -1,9 +1,10 @@
 // apps/backend/src/controllers/agentController.js
-import Agent from "../models/Agent.js";
 import User from "../models/User.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import Crop from "../models/Crop.js";
+import LedgerEntry from "../models/LedgerEntry.js";
+import Notification from "../models/Notification.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -15,16 +16,17 @@ export const registerAgent = async (req, res) => {
   try {
     const { fullName, email, password, phone, region } = req.body;
 
-    const exists = await Agent.findOne({ email });
-    if (exists) return res.status(400).json({ message: "Agent already exists" });
+    const exists = await User.findOne({ email });
+    if (exists) return res.status(400).json({ message: "User already exists" });
 
     const hashed = await bcrypt.hash(password, 10);
-    const agent = new Agent({
+    const agent = new User({
       fullName,
       email,
       password: hashed,
       phone,
       region,
+      role: "agent"
     });
 
     await agent.save();
@@ -39,7 +41,7 @@ export const registerAgent = async (req, res) => {
 export const loginAgent = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const agent = await Agent.findOne({ email });
+    const agent = await User.findOne({ email, role: "agent" });
 
     if (!agent) return res.status(400).json({ message: "Invalid credentials" });
 
@@ -73,7 +75,7 @@ export const getAgentDashboard = async (req, res) => {
   try {
     const farmers = await User.countDocuments({ role: "farmer" });
     const crops = await Crop.countDocuments({});
-    const pendingOrders = await Order.countDocuments({ status: "Pending" });
+    const pendingOrders = await Order.countDocuments({ status: "Ordered" });
     const completedOrders = await Order.countDocuments({ status: "Completed" });
 
     res.json({
@@ -176,7 +178,7 @@ export const approveProduct = async (req, res) => {
 
     // === Add 2% commission to the agent if approved ===
     if (approve) {
-      const agent = await Agent.findById(req.user._id);
+      const agent = await User.findById(req.user._id);
       const commission = (product.price * product.quantity * 2) / 100;
       agent.commissionEarned += commission;
       await agent.save();
@@ -245,6 +247,37 @@ export const updateOrderStatus = async (req, res) => {
     order.status = status;
     await order.save();
 
+    // Notify buyer of status change
+    const notif = await Notification.create({
+      user: order.buyer,
+      title: "Order Update",
+      message: `Your order ${order._id} status changed to ${status}`,
+      data: { orderId: order._id, status },
+    });
+
+    try {
+      const io = req.app.locals.io;
+      const onlineUsers = req.app.locals.onlineUsers;
+      if (io && onlineUsers) {
+        const socketId = onlineUsers.get(String(order.buyer));
+        if (socketId) io.to(socketId).emit("notification", notif);
+      }
+    } catch (e) {
+      console.warn("Socket emit failed:", e.message || e);
+    }
+
+    // If delivered/completed, create ledger income for farmer
+    if (status === "Delivered" || status === "Completed") {
+      await LedgerEntry.create({
+        farmer: order.farmer,
+        type: "income",
+        amount: order.total || (order.price * order.quantity),
+        description: `Income from order ${order._id} (Approved by Agent)`,
+        source: "order",
+        meta: { orderId: order._id },
+      });
+    }
+
     res.json({ message: "Order status updated", order });
   } catch (err) {
     console.error("updateOrderStatus:", err);
@@ -256,7 +289,7 @@ export const updateOrderStatus = async (req, res) => {
 // =================== PROFILE ===================
 export const getAgentProfile = async (req, res) => {
   try {
-    const agent = await Agent.findById(req.user._id).select("-password");
+    const agent = await User.findById(req.user._id).select("-password");
     res.json(agent);
   } catch (error) {
     res
@@ -267,7 +300,7 @@ export const getAgentProfile = async (req, res) => {
 
 export const updateAgentProfile = async (req, res) => {
   try {
-    const agent = await Agent.findById(req.user._id);
+    const agent = await User.findById(req.user._id);
     if (!agent) return res.status(404).json({ message: "Agent not found" });
 
     const { fullName, phone, region, password } = req.body;

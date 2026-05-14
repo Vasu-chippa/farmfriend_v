@@ -1,0 +1,22 @@
+/* FarmerLayout styles to position the sidebar and main content */
+.app-layout.farmer-layout{
+  display:flex;
+  min-height:100vh;
+  /* Dashboard background colors — default: green gradient. To switch to blue, set --bg-start:#e8f5ff; --bg-end:#ffffff */
+  --bg-start: #eaf9ed;
+  --bg-mid: #f6fff6;
+  --bg-end: #ffffff;
+  background: linear-gradient(120deg, var(--bg-start) 0%, var(--bg-mid) 45%, var(--bg-end) 100%);
+}
+
+.farmer-main{
+  flex:1;
+  padding:28px 6vw;
+  /* account for fixed sidebar width + spacing (sidebar width variable + gap) */
+  padding-left: calc(var(--sidebar-width, 300px) + 40px);
+  transition: padding-left 220ms ease;
+}
+
+@media (max-width:900px){
+  .farmer-main{padding:18px;padding-left:calc(var(--sidebar-width, 96px) + 16px)}
+}

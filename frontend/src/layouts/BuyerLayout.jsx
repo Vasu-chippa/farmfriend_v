@@ -1,17 +1,16 @@
 // frontend/src/layouts/BuyerLayout.jsx
 import React from "react";
-import BuyerSidebar from "../components/BuyerSidebar";
+import Sidebar from "../components/Sidebar/Sidebar";
+import { motion } from 'framer-motion';
 
 const BuyerLayout = ({ children }) => {
   return (
-    <div className="flex">
-      {/* Sidebar */}
-      <BuyerSidebar />
+    <div className="app-layout buyer-layout">
+      <Sidebar />
 
-      {/* Main Content */}
-      <div className="flex-1 bg-gray-50 min-h-screen p-6">
+      <motion.div className="app-main" initial={{opacity:0, y:6}} animate={{opacity:1,y:0}} transition={{duration:0.36}}>
         {children}
-      </div>
+      </motion.div>
     </div>
   );
 };

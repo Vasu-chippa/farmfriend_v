@@ -6,9 +6,8 @@
 
 /* Content area next to sidebar */
 .orders-content {
-  margin-left: 170px; /* same width as sidebar */
   padding: 20px;
-  width: 90%;
+  width: 100%;
   background: #f4f6f8;
 }
 

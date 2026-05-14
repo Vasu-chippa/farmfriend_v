@@ -1,12 +1,12 @@
 .orders-layout {
   display: flex;
+  padding-left: 400px;
   min-height: 100vh;
   background: #f9fafb;
 }
 
 .orders-container {
   flex: 1;
-  margin-left: 220px; /* sidebar width */
   padding: 30px;
 }
 
@@ -41,7 +41,7 @@
 }
 
 .orders-table th {
-  background: #2e7d32;
+  background: var(--ff-primary);
   color: white;
   font-weight: 600;
 }
@@ -50,6 +50,24 @@
   background: #f1f8f4;
   transition: 0.2s;
 }
+
+.order-row{transition:transform .18s ease, box-shadow .18s ease}
+.order-row:hover{transform:translateY(-6px);box-shadow:0 14px 34px rgba(2,16,12,0.06)}
+
+.col-product .prod-cell{display:flex;align-items:center;gap:10px}
+.prod-icon{color:var(--ff-primary);font-size:20px}
+
+.col-ids{display:flex;flex-direction:column;gap:6px;text-align:left}
+.id-row{display:flex;align-items:center;gap:8px;background:#fbfefb;padding:6px 8px;border-radius:8px;border:1px solid #f0f6f0}
+.id-icon{color:#2e7d32}
+.id-val{font-weight:700;font-family: 'Segoe UI', Roboto, system-ui}
+
+/* subtle entrance animation */
+@keyframes fadeUp {from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.orders-table tbody tr{animation:fadeUp .28s ease both}
+
+.orders-title{display:flex;align-items:center;gap:12px;font-family:'Segoe UI', Roboto, system-ui;font-weight:700}
+.orders-title .title-icon{font-size:24px}
 
 .order-img {
   width: 80px;
@@ -80,37 +98,12 @@
   color: #721c24;
 }
 
-.btn {
-  padding: 6px 12px;
-  margin: 2px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: 0.3s;
-}
+.orders-table .btn{padding:8px 12px;border-radius:8px}
+.orders-table .btn + .btn{margin-left:8px}
+.order-img {width:70px;height:60px;object-fit:cover;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
 
-.edit-btn {
-  background: #1976d2;
-  color: white;
-}
-
-.edit-btn:hover {
-  background: #0d47a1;
-}
-
-.delete-btn {
-  background: #d32f2f;
-  color: white;
-}
-
-.delete-btn:hover {
-  background: #b71c1c;
-}
-.order-img {
-  width: 70px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+@media(max-width:900px){
+  .orders-table thead{display:none}
+  .orders-table tr{display:block;margin-bottom:12px}
+  .orders-table td{display:flex;justify-content:space-between;padding:12px;border-bottom:none}
 }

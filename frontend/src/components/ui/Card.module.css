@@ -1,0 +1,5 @@
+.card{background:var(--ff-surface);border-radius:var(--ff-radius);box-shadow:var(--ff-shadow);padding:14px;transition:transform .22s ease,box-shadow .22s ease;display:flex;flex-direction:column}
+.card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(16,24,40,0.12)}
+
+.card-title{font-weight:700;margin:0 0 8px 0}
+.card-sub{color:var(--ff-muted);font-size:0.95rem}
