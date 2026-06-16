@@ -1,7 +1,10 @@
 [build]
-  # Build command: change if you use yarn or pnpm
-  command = "npm run build --prefix frontend"
-  publish = "frontend/build"
+  # Base directory for builds (set this so Netlify runs from frontend/)
+  base = "frontend"
+  # Build command to run inside the frontend folder
+  command = "npm run build"
+  # Publish directory relative to the base directory
+  publish = "build"
 
 [context.production.environment]
   # Set this in Netlify UI too: REACT_APP_API_URL=https://farmfriend-v-ak1n.onrender.com/api
