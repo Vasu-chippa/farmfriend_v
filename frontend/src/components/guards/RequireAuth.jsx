@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { getCurrentUser } from "../../services/authService";
+import authUtils from "../../utils/auth";
 
 const RequireAuth = ({ allowedRoles, redirectTo = "/login", children }) => {
   const location = useLocation();
@@ -13,6 +14,16 @@ const RequireAuth = ({ allowedRoles, redirectTo = "/login", children }) => {
   useEffect(() => {
     let mounted = true;
     (async () => {
+      // Prefer local cached user (set on login) to avoid redirect loops
+      const cached = authUtils.getUser();
+      if (cached) {
+        if (mounted) {
+          setUser(cached);
+          setLoading(false);
+        }
+        return;
+      }
+
       const u = await getCurrentUser();
       if (mounted) {
         setUser(u);
