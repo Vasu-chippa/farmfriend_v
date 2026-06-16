@@ -52,14 +52,25 @@ app.use(
     origin: (origin, callback) => {
       // Allow non-browser requests (e.g., curl, server-to-server) with no origin
       if (!origin) return callback(null, true);
-      // Allow any Netlify subdomain for this project
-      if (typeof origin === 'string' && origin.endsWith('.netlify.app')) return callback(null, origin);
-      if (allowedOrigins.includes(origin)) return callback(null, origin);
-      return callback(new Error("CORS origin not allowed"), false);
+        // Allow any Netlify subdomain for this project
+        if (typeof origin === 'string' && origin.endsWith('.netlify.app')) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error("CORS origin not allowed"), false);
     },
     credentials: true,
   })
 );
+
+  // Ensure preflight (OPTIONS) requests are handled and return the CORS headers
+  app.options("*", cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (typeof origin === 'string' && origin.endsWith('.netlify.app')) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("CORS origin not allowed"), false);
+    },
+    credentials: true,
+  }));
 app.use(morgan("dev"));
 
 // Static folder for uploaded images
