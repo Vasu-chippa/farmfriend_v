@@ -42,6 +42,8 @@ app.use(cookieParser());
 const allowedOrigins = [
   process.env.CLIENT_URL,
   "https://farm-friends.netlify.app",
+  // Allow other farmfriend Netlify subdomains (e.g. farmfriend-s.netlify.app)
+  "https://farmfriend-s.netlify.app",
   "http://localhost:3000",
 ].filter(Boolean);
 
@@ -50,6 +52,8 @@ app.use(
     origin: (origin, callback) => {
       // Allow non-browser requests (e.g., curl, server-to-server) with no origin
       if (!origin) return callback(null, true);
+      // Allow any Netlify subdomain for this project
+      if (typeof origin === 'string' && origin.endsWith('.netlify.app')) return callback(null, origin);
       if (allowedOrigins.includes(origin)) return callback(null, origin);
       return callback(new Error("CORS origin not allowed"), false);
     },
